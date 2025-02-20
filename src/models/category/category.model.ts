@@ -1,0 +1,92 @@
+import { ICrud } from "../../interfaces/crud.interface";
+import { ResponseRequest } from "../../interfaces/response-request.interface";
+import { getConnectionDB } from "../../utils/connection-db.util";
+
+export interface Category {
+  id: number;
+  name: string;
+  weight: number;
+}
+export class CategoryModel implements ICrud<Category> {
+
+
+  async create(data: Category): Promise<ResponseRequest> {
+
+    try {
+      const connection = await getConnectionDB();
+      const [response] = await connection.query('INSERT INTO Category SET ?;', [data]);
+      if (!response) {
+        throw new Error('Error al crear una categoría');
+      }
+      return {
+        statusCode: 201,
+        message: 'Éxito',
+        success: true
+      }
+
+    } catch (error) {
+
+      return {
+        statusCode: 500,
+        success: false,
+        message: 'Error',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      }
+    }
+  }
+  async update(id: number, data: Category): Promise<ResponseRequest> {
+    try {
+      const connection = await getConnectionDB();
+      const [result] = await connection.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
+
+      if (!result) {
+        throw new Error('Categoría no encontrada');
+      }
+
+      return {
+        statusCode: 200,
+        success: true,
+        message: 'Categoría modificada'
+      }
+
+    } catch (error) {
+      return {
+        statusCode: 500,
+        message: 'Error',
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      }
+    }
+  }
+  delete(id: string | number): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
+    try {
+
+      const connection = await getConnectionDB();
+      const [response] = await connection.query('SELECT * FROM Category');
+
+      if (!response) {
+        throw new Error('Error al consultar las categorías');
+
+      }
+
+      return {
+        statusCode: 200,
+        data: response,
+        message: 'Existo',
+        success: true,
+      }
+
+    } catch (error) {
+      return {
+        statusCode: 500,
+        message: 'Error',
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      }
+    }
+  }
+
+}

@@ -3,5 +3,5 @@ import { ICrud } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 
 export interface ISchool extends ICrud<School> {
-  getSchool(id: string): Promise<ResponseRequest>
+  getSchool(id: number): Promise<ResponseRequest>
 }

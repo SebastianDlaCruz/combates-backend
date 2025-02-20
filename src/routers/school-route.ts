@@ -14,3 +14,17 @@ schoolRouter.get('/', (req, res) => {
 schoolRouter.post('/', (req, res) => {
   schoolController.create(req, res);
 })
+
+schoolRouter.get('/:id', (req, res) => {
+  schoolController.getSchool(req, res);
+})
+
+
+schoolRouter.delete('/:id', (req, res) => {
+  schoolController.delete(req, res);
+})
+
+
+schoolRouter.patch('/:id', (req, res) => {
+  schoolController.delete(req, res);
+})

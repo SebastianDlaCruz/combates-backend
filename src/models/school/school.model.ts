@@ -1,6 +1,7 @@
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { ISchool } from "../../interfaces/school.interface";
 import { getConnectionDB } from "../../utils/connection-db.util";
+import { getStateError } from "../../utils/getStateError.util";
 
 export interface School {
   id: number;
@@ -8,11 +9,34 @@ export interface School {
 }
 
 export class SchoolModel implements ISchool {
-  getSchool(id: string): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async getSchool(id: number): Promise<ResponseRequest> {
+    try {
+      const connection = await getConnectionDB();
+
+      const [result] = await connection.query('SELECT * FROM School WHERE id = ?', [id]);
+
+      if (!result) {
+        throw new Error('Escuela no encontrada');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Éxito',
+        success: true,
+        data: result,
+
+      }
+    } catch (error) {
+      return getStateError({
+        error
+      })
+    }
   }
+
   async create(data: School): Promise<ResponseRequest> {
     try {
+
       const connection = await getConnectionDB();
       const [res] = await connection.query('INSERT INTO School SET ?', [data]);
 
@@ -25,20 +49,58 @@ export class SchoolModel implements ISchool {
         success: true
       }
     } catch (error) {
-      return {
-        statusCode: 500,
-        message: 'Error al crear la escuela',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({
+        error
+      })
     }
   }
-  update(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async update(id: number, data: School): Promise<ResponseRequest> {
+
+    try {
+      const connection = await getConnectionDB();
+      const [res] = await connection.query('UPDATE School name = ? WHERE id = ?', [data.name, id]);
+
+      if (!res) {
+        throw new Error('Error al actualizar la escuela')
+      }
+      return {
+        statusCode: 200,
+        message: 'Éxito',
+        success: true,
+        data: data,
+
+      }
+    } catch (error) {
+      const result = getStateError({
+        error
+      });
+      return result;
+    }
   }
-  delete(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async delete(id: number): Promise<ResponseRequest> {
+    try {
+      const connection = await getConnectionDB();
+      const [res] = await connection.query('DELETE FROM School WHERE id = ?', [id]);
+
+      if (!res) {
+        throw new Error('Error al eliminar una escuela');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Éxito',
+        success: true,
+      }
+
+    } catch (error) {
+      return getStateError({
+        error
+      });
+    }
   }
+
   async getAll(): Promise<ResponseRequest> {
 
     try {
@@ -59,12 +121,9 @@ export class SchoolModel implements ISchool {
 
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({
+        error
+      })
     }
   }
 

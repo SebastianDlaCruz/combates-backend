@@ -14,3 +14,7 @@ stateRouter.get('/', (req, res) => {
 stateRouter.post('/', (req, res) => {
   stateController.create(req, res);
 })
+
+stateRouter.patch('/', (req, res) => {
+  stateController.update(req, res);
+})

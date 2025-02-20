@@ -1,7 +1,11 @@
 import { IBoxer } from "../../interfaces/boxer.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { getConnectionDB } from "../../utils/connection-db.util";
-
+import { getStateError } from "../../utils/getStateError.util";
+import { getPagination } from "../../utils/pagination.util";
+interface QueryResult {
+  totalItems: number;
+}
 
 export interface Boxer {
   id: string;
@@ -20,8 +24,30 @@ export interface Boxer {
 export class BoxerModel implements IBoxer {
 
 
-  getBoxer(id: string): Promise<Boxer> {
-    throw new Error("Method not implemented.");
+  async getBoxer(id: string): Promise<ResponseRequest> {
+
+    try {
+
+      const connection = await getConnectionDB();
+
+      const [result] = await connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
+
+      return {
+        statusCode: 200,
+        message: 'Existo',
+        success: true,
+        data: result,
+      }
+
+    } catch (error) {
+
+      return {
+        statusCode: 500,
+        message: 'Error',
+        success: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      }
+    }
   }
 
   async create(data: Boxer): Promise<ResponseRequest> {
@@ -47,8 +73,34 @@ export class BoxerModel implements IBoxer {
       }
     }
   }
-  update(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async update(id: number, data: Boxer): Promise<ResponseRequest> {
+
+    try {
+
+      const connection = await getConnectionDB();
+
+      const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight } = data;
+
+      const [boxer] = await connection.query('UPDATE Boxer name,id_school,disability,id_category,weight,id_coach,details,id_state WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, id]);
+
+      if (!boxer) {
+        throw new Error('Error al actualizar el boxeador');
+      }
+
+      return {
+        statusCode: 200,
+        message: 'Éxito',
+        success: true,
+        data: boxer,
+
+      }
+    } catch (error) {
+
+      return getStateError({
+        error
+      })
+    }
   }
 
   async updateState(id: string, idState: number): Promise<ResponseRequest> {
@@ -69,12 +121,9 @@ export class BoxerModel implements IBoxer {
       }
 
     } catch (error) {
-      return {
-        statusCode: 500,
-        message: 'Error al actualizar el estado del boxeador',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({
+        error
+      })
     }
   }
 
@@ -102,20 +151,41 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
 
-      return {
-        statusCode: 300,
-        message: 'Error al eliminar un Boxeador',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({
+        error
+      })
     }
   }
 
 
-  async getAll(): Promise<ResponseRequest> {
+  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
+
+    const connection = await getConnectionDB();
+
+
 
     try {
-      const connection = await getConnectionDB();
+
+      if (page && pageSize) {
+
+
+        const pagination = await getPagination({
+          page: parseInt(page),
+          pageSize: parseInt(pageSize),
+          querySelect: 'SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer LIMIT ? OFFSET ?;',
+          queryItems: 'SELECT COUNT(*) as totalItems FROM Boxer;',
+          routerApi: 'api/v1/boxer'
+        });
+
+
+        return {
+          statusCode: 200,
+          message: 'Existo',
+          success: true,
+          pagination
+        }
+
+      }
       const [boxers] = await connection.query('SELECT  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer');
 
       return {
@@ -125,15 +195,10 @@ export class BoxerModel implements IBoxer {
         message: 'éxito'
       }
 
-    } catch (err) {
-      return {
-
-        statusCode: 500,
-        success: false,
-        message: 'error al obtener los boxeadores',
-        error: err instanceof Error ? err.message : 'Error desconocido'
-
-      }
+    } catch (error) {
+      return getStateError({
+        error
+      })
     }
   }
 

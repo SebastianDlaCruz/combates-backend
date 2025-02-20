@@ -11,6 +11,10 @@ routerBoxer.get('/', (req, res) => {
   boxerController.getAll(req, res);
 });
 
+routerBoxer.get('/:id', (req, res) => {
+  boxerController.getBoxer(req, res);
+});
+
 routerBoxer.post('/', (req, res) => {
   boxerController.create(req, res);
 });
@@ -21,4 +25,9 @@ routerBoxer.delete('/:id', (req, res) => {
 
 routerBoxer.patch('/:id/:idState', (req, res) => {
   boxerController.updateState(req, res)
+})
+
+
+routerBoxer.patch('/:id', (req, res) => {
+  boxerController.update(req, res)
 })

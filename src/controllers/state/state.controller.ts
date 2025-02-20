@@ -34,4 +34,26 @@ export class StateController {
       res.json(result);
     }
   }
+
+  async update(req: Request, res: Response) {
+
+    const validate = validateSchema(stateSchema, req.body);
+
+    if (validate.error) {
+      res.status(500);
+      res.json({
+        error: JSON.parse(validate.error.message)
+      })
+    }
+
+    if (validate.success) {
+
+      const { id } = req.params;
+
+      const result = await this.state.update(id, validate.data as State);
+      res.status(result.statusCode);
+      res.json(result);
+    }
+  }
+
 }
