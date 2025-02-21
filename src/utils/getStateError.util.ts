@@ -1,17 +1,8 @@
-export interface Error {
-  statusCode: number;
-  message: string;
-  success: boolean;
-  error: string;
-}
+import { ResponseRequest } from "../interfaces/response-request.interface"
+import { Config } from "../models/request-state/request.state.model"
 
-export interface Config {
-  statusCode?: number;
-  message?: string;
-  error: any;
-}
 
-export const getStateError = (config?: Config): Error => {
+export const getStateError = (config?: Config): ResponseRequest => {
   return {
     statusCode: config?.statusCode ? config.statusCode : 500,
     success: false,

@@ -2,6 +2,7 @@ import { IBoxer } from "../../interfaces/boxer.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { getConnectionDB } from "../../utils/connection-db.util";
 import { getStateError } from "../../utils/getStateError.util";
+import { getStateSuccess } from "../../utils/getStateSucces.utilt";
 import { getPagination } from "../../utils/pagination.util";
 interface QueryResult {
   totalItems: number;
@@ -18,6 +19,9 @@ export interface Boxer {
   id_coach: number;
   details: string
   id_state: number;
+  corner: string;
+  fights: number;
+  gender: string
 }
 
 
@@ -32,21 +36,13 @@ export class BoxerModel implements IBoxer {
 
       const [result] = await connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
-      return {
-        statusCode: 200,
-        message: 'Existo',
-        success: true,
-        data: result,
-      }
+      return getStateSuccess({
+        data: result
+      })
 
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error })
     }
   }
 
@@ -80,9 +76,9 @@ export class BoxerModel implements IBoxer {
 
       const connection = await getConnectionDB();
 
-      const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight } = data;
+      const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
 
-      const [boxer] = await connection.query('UPDATE Boxer name,id_school,disability,id_category,weight,id_coach,details,id_state WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, id]);
+      const [boxer] = await connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? ,  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, id]);
 
       if (!boxer) {
         throw new Error('Error al actualizar el boxeador');

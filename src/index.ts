@@ -2,6 +2,7 @@ import cors from 'cors';
 import express from 'express';
 import { routerBoxer } from './routers/boxer-route';
 import { categoryRouter } from './routers/category-route';
+import { clashesRouter } from './routers/clashes.route';
 import { coachRouter } from './routers/coach-route';
 import { schoolRouter } from './routers/school-route';
 import { stateRouter } from './routers/state.route';
@@ -18,6 +19,7 @@ app.use('/api/v1/coach', coachRouter);
 app.use('/api/v1/school', schoolRouter);
 app.use('/api/v1/state', stateRouter);
 app.use('/api/v1/category', categoryRouter);
+app.use('/api/v1/clashes', clashesRouter);
 
 
 
