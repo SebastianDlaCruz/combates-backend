@@ -80,4 +80,13 @@ export class BoxerController {
     }
   }
 
+
+  async getByCategory(req: Request, res: Response) {
+    const { id_category } = req.params;
+    const result = await this.boxer.getByCategory(parseInt(id_category));
+    res.status(result.statusCode);
+    res.json(result);
+  }
+
+
 }

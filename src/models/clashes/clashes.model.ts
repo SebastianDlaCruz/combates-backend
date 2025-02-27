@@ -16,6 +16,7 @@ export interface Clashes {
   number_clashes: number;
   id_type_clashes: number;
   rounds: number;
+  id_category: number;
   id_boxer_one: string;
   id_boxer_two: string;
   id_boxer_tree?: string;
@@ -49,9 +50,9 @@ export class ClashesModel implements IClashes {
 
   async update(data: Clashes): Promise<ResponseRequest> {
     try {
-      const { id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state } = data;
+      const { id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
       const connection = await getConnectionDB();
-      const [result] = await connection.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_tree = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?', [id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state]);
+      const [result] = await connection.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_tree = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ?', [id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state, id_category]);
 
       if (!result) {
         throw new Error('Error al actualizar el enfrentamiento');
@@ -100,7 +101,7 @@ export class ClashesModel implements IClashes {
 
       }
 
-      const [result] = await connection.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
+      const [result] = await connection.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
 
 
       const clashes = result as any[];

@@ -53,20 +53,14 @@ export class BoxerModel implements IBoxer {
       const [result] = await connection.query('INSERT INTO Boxer SET ?', [data]);
 
       return {
-        statusCode: 200,
+        statusCode: 201,
         success: true,
         message: 'éxito al crear el boxeador'
       }
 
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        success: false,
-        data: null,
-        message: 'error al crear los boxeadores',
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error });
     }
   }
 
@@ -78,7 +72,7 @@ export class BoxerModel implements IBoxer {
 
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
 
-      const [boxer] = await connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? ,  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, id]);
+      const [boxer] = await connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? , age = ?  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, age, id]);
 
       if (!boxer) {
         throw new Error('Error al actualizar el boxeador');
@@ -153,12 +147,30 @@ export class BoxerModel implements IBoxer {
     }
   }
 
+  async getByCategory(id_category: number): Promise<ResponseRequest> {
+
+    try {
+      const connection = await getConnectionDB();
+      const [result] = await connection.query('SELECT SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer WHERE id_category = ? ', [id_category]);
+
+      if (!result) {
+        throw new Error('Erro al encontrar boxeador por su categoría');
+      }
+
+      return getStateSuccess({
+        data: result
+      });
+
+    } catch (error) {
+      return getStateError({
+        error
+      })
+    }
+  }
 
   async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
 
     const connection = await getConnectionDB();
-
-
 
     try {
 

@@ -29,6 +29,7 @@ export class ClashesController {
     }
   }
 
+
   async getAll(req: Request, res: Response) {
 
     const { page, pageSize } = req.query;

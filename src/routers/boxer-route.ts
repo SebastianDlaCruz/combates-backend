@@ -23,11 +23,16 @@ routerBoxer.delete('/:id', (req, res) => {
   boxerController.delete(req, res);
 });
 
-routerBoxer.patch('/:id/:idState', (req, res) => {
+routerBoxer.patch('/:id/state/:idState', (req, res) => {
   boxerController.updateState(req, res)
 })
 
 
 routerBoxer.patch('/:id', (req, res) => {
   boxerController.update(req, res)
-})
+});
+
+
+routerBoxer.patch('/category/:id', (req, res) => {
+  boxerController.getByCategory(req, res);
+});
