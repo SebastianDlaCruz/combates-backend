@@ -1,9 +1,9 @@
+import { PoolConnection } from "mysql2/promise";
 import { IBoxer } from "../../interfaces/boxer.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getConnectionDB } from "../../utils/connection-db.util";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSucces.utilt";
-import { getPagination } from "../../utils/pagination.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getPagination } from "../../utils/pagination/pagination.util";
 interface QueryResult {
   totalItems: number;
 }
@@ -27,14 +27,23 @@ export interface Boxer {
 
 export class BoxerModel implements IBoxer {
 
+  private connection: PoolConnection;
+
+  constructor(connection: PoolConnection) {
+    this.connection = connection;
+  }
+
+  private release() {
+    if (this.connection) {
+      this.connection.release();
+    }
+  }
 
   async getBoxer(id: string): Promise<ResponseRequest> {
 
     try {
 
-      const connection = await getConnectionDB();
-
-      const [result] = await connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
+      const [result] = await this.connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
       return getStateSuccess({
         data: result
@@ -43,115 +52,112 @@ export class BoxerModel implements IBoxer {
     } catch (error) {
 
       return getStateError({ error })
+    } finally {
+      this.release();
     }
   }
 
   async create(data: Boxer): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
 
-      const [result] = await connection.query('INSERT INTO Boxer SET ?', [data]);
+      const [result] = await this.connection.query('INSERT INTO Boxer SET ?', [data]);
 
-      return {
-        statusCode: 201,
-        success: true,
-        message: 'éxito al crear el boxeador'
+      if (!result) {
+        throw new Error('Error al crear  boxeador')
       }
+
+
+      return getStateSuccess({
+        statusCode: 201,
+        message: 'éxito al crear el boxeador'
+      })
 
     } catch (error) {
 
       return getStateError({ error });
+    } finally {
+      this.release();
     }
   }
 
-  async update(id: number, data: Boxer): Promise<ResponseRequest> {
+  async update(id: string, data: Boxer): Promise<ResponseRequest> {
 
     try {
 
-      const connection = await getConnectionDB();
-
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
 
-      const [boxer] = await connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? , age = ?  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, age, id]);
+      const [boxer] = await this.connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? , age = ?  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, age, id]);
 
       if (!boxer) {
         throw new Error('Error al actualizar el boxeador');
       }
 
-      return {
-        statusCode: 200,
-        message: 'Éxito',
-        success: true,
-        data: boxer,
+      return getStateSuccess();
 
-      }
     } catch (error) {
-
       return getStateError({
         error
       })
+    } finally {
+      this.release();
     }
   }
 
   async updateState(id: string, idState: number): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
-      const [boxer] = await connection.query('SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
-      if (!boxer) {
-        throw new Error('Boxer no encontrado');
+
+      const [state] = await this.connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState, id]);
+
+      if (!state) {
+        throw new Error('Error al actualizar el estado');
       }
 
-      const [state] = await connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState, id]);
-
-      return {
-        statusCode: 200,
-        success: true,
-        message: 'Éxito al actualizar el estado del boxeador'
-      }
+      return getStateSuccess();
 
     } catch (error) {
       return getStateError({
         error
       })
+    } finally {
+      this.release();
     }
   }
 
 
   async delete(id: string): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);', [id])
+
+      const [result] = await this.connection.query('SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);', [id])
 
       if (!result) {
-        return {
+        getStateError({
           statusCode: 400,
-          success: false,
           message: 'Elemento no encontrado'
-        }
+        });
       }
 
-      await connection.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
+      await this.connection.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
-      return {
-        statusCode: 204,
-        success: true,
-        message: 'Boxeador eliminado'
-      }
+
+      return getStateSuccess({ statusCode: 204, message: 'Boxeador eliminado' });
+
 
     } catch (error) {
 
       return getStateError({
         error
       })
+    } finally {
+      this.release();
     }
   }
 
   async getByCategory(id_category: number): Promise<ResponseRequest> {
 
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('SELECT SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer WHERE id_category = ? ', [id_category]);
+
+      const [result] = await this.connection.query('SELECT SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer WHERE id_category = ? ', [id_category]);
 
       if (!result) {
         throw new Error('Erro al encontrar boxeador por su categoría');
@@ -165,49 +171,58 @@ export class BoxerModel implements IBoxer {
       return getStateError({
         error
       })
+    } finally {
+      this.release();
     }
   }
 
-  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
-
-    const connection = await getConnectionDB();
+  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
 
     try {
 
       if (page && pageSize) {
 
-
-        const pagination = await getPagination({
+        const responsePagination = await getPagination({
           page: parseInt(page),
           pageSize: parseInt(pageSize),
           querySelect: 'SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer LIMIT ? OFFSET ?;',
           queryItems: 'SELECT COUNT(*) as totalItems FROM Boxer;',
-          routerApi: 'api/v1/boxer'
+          routerApi: 'api/v1/boxer',
+          connection: this.connection
         });
 
+        if (!responsePagination.success) {
+          throw new Error('Error al devolver la paginacion de los boxeadores');
+        }
 
-        return {
-          statusCode: 200,
-          message: 'Existo',
-          success: true,
-          pagination
+        if (responsePagination.success) {
+          return getStateSuccess({
+            pagination: responsePagination.pagination
+          });
         }
 
       }
-      const [boxers] = await connection.query('SELECT  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer');
 
-      return {
-        statusCode: 200,
-        data: boxers,
-        success: true,
-        message: 'éxito'
+
+
+      const [boxers] = await this.connection.query('SELECT  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer');
+
+      if (!boxers) {
+        throw new Error('Error al consultar los boxeadores');
       }
+
+      return getStateSuccess({
+        data: boxers
+      });
 
     } catch (error) {
       return getStateError({
         error
       })
+    } finally {
+      this.release();
     }
   }
+
 
 }

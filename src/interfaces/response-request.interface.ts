@@ -6,7 +6,9 @@ export interface Pagination {
   pageSize: number; // Tamaño de la página
   next: string | null; // Página siguiente (número o URL)
   prev?: string | null;
+  messageError?: string;
 }
+
 
 export interface ResponseRequest {
   statusCode: number;
@@ -14,5 +16,5 @@ export interface ResponseRequest {
   data?: unknown;
   message: string;
   error?: any;
-  pagination?: Pagination | null;
+  pagination?: Pagination;
 }

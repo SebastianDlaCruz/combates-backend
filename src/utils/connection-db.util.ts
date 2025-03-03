@@ -1,4 +1,5 @@
-import mysql from 'mysql2/promise';
+import mysql, { createPool } from 'mysql2/promise';
+
 const {
   HOST,
   USER,
@@ -6,25 +7,28 @@ const {
   PASSWORD,
   DATABASE } = process.env;
 
-export const getConnectionDB = async (): Promise<mysql.Connection> => {
+export const getConnectionDB = async (): Promise<mysql.PoolConnection> => {
 
 
   if (!HOST || !USER || !PORTDB || !PASSWORD || !DATABASE) {
     throw new Error('Faltan variables de entorno para la conexión de la base de datos.')
   }
 
-  const config = {
-    host: HOST || '',
-    user: USER || '',
-    port: parseInt(PORTDB || '0'),
-    password: PASSWORD || '',
-    database: DATABASE || ''
-  };
-
 
   try {
 
-    const connection = await mysql.createConnection(config);
+    const config = {
+      host: HOST,
+      user: USER,
+      port: parseInt(PORTDB),
+      password: PASSWORD,
+      database: DATABASE,
+      connectionLimit: 10,
+      queueLimit: 0,
+    };
+
+    const pool = createPool(config)
+    const connection = await pool.getConnection();
 
     return connection;
 

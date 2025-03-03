@@ -1,6 +1,8 @@
+import { PoolConnection } from "mysql2/promise";
 import { ICoach } from "../../interfaces/coach.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getConnectionDB } from "../../utils/connection-db.util";
+import { getStateError } from "../../utils/getStateError.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util";
 
 export interface Coach {
   id: number;
@@ -9,27 +11,34 @@ export interface Coach {
 }
 
 export class CoachModel implements ICoach {
+  private connection: PoolConnection;
+  constructor(connection: PoolConnection) {
+    this.connection = connection;
+  }
 
   getCoach(id: string): Promise<ResponseRequest> {
     throw new Error("Method not implemented.");
   }
 
+  private release() {
+    if (this.connection) {
+      this.connection.release();
+    }
+  }
   async create(data: Coach): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('INSERT INTO Coach SET ?', [data]);
-      return {
-        statusCode: 200,
-        success: true,
-        message: 'Entrenador creador con éxito'
+
+      const [result] = await this.connection.query('INSERT INTO Coach SET ?', [data]);
+      if (!result) {
+        throw new Error('Error al crear un entrenador')
       }
+      return getStateSuccess({ statusCode: 201 });
+
     } catch (error) {
-      return {
-        statusCode: 500,
-        message: 'Error al crear un entrenador',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error });
+
+    } finally {
+      this.release();
     }
   }
 

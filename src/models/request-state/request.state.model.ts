@@ -14,5 +14,5 @@ export interface Config {
   message?: string;
   error?: any;
   data?: any;
-  pagination?: Pagination
+  pagination?: Pagination;
 }

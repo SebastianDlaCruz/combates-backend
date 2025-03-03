@@ -1,10 +1,12 @@
-import { getConnectionDB } from "../../utils/connection-db.util";
+import { PoolConnection } from "mysql2/promise";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSucces.utilt";
+import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getPagination } from "../../utils/pagination/pagination.util";
 import { Boxer, BoxerModel } from "./boxer.model";
 
-jest.mock('../../utils/connection-db.util.ts')
-
+jest.mock('../../utils/pagination/pagination.util', () => ({
+  getPagination: jest.fn(),
+}));
 
 describe('BoxerModel', () => {
 
@@ -12,13 +14,16 @@ describe('BoxerModel', () => {
   let dbTest: <T>(data: T) => jest.Mock<any, any, any>
   let errorTest: (error: Error) => jest.Mock<any, any, any>;
 
-  beforeEach(() => {
-    boxerModel = new BoxerModel();
-    dbTest = <T>(data: T) => (getConnectionDB as jest.Mock).mockResolvedValue({
-      query: jest.fn().mockResolvedValue(data)
-    });
+  const mockConnection: Partial<PoolConnection> = {
+    query: jest.fn(),
+    release: jest.fn(),
+  };
 
-    errorTest = (error: Error) => (getConnectionDB as jest.Mock).mockRejectedValue(error);
+  beforeEach(() => {
+    boxerModel = new BoxerModel(mockConnection as PoolConnection);
+    dbTest = <T>(data: T) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data)
+    errorTest = (error: Error) => (mockConnection.query as jest.Mock).mockRejectedValueOnce(error);
+
   });
 
   afterEach(() => {
@@ -33,11 +38,18 @@ describe('BoxerModel', () => {
 
     const mockBoxer = { id: '1', name: 'sebastian' };
 
-    dbTest([mockBoxer]);
+    dbTest([[mockBoxer]]);
 
     const result = await boxerModel.getBoxer('1');
 
-    expect(result).toEqual(getStateSuccess({ data: mockBoxer }))
+    expect(mockConnection.query).toHaveBeenCalledWith(
+      'SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);',
+      ['1']
+    )
+
+    const stateSuccess = getStateSuccess({ message: 'Éxito', data: [mockBoxer] });
+
+    expect(result).toEqual(stateSuccess);
 
   });
 
@@ -73,6 +85,8 @@ describe('BoxerModel', () => {
 
     const result = await boxerModel.create(dataMock);
 
+    expect(mockConnection.query).toHaveBeenCalledWith('INSERT INTO Boxer SET ?', [dataMock]);
+
     expect(result).toEqual(getStateSuccess({ statusCode: 201, message: 'éxito al crear el boxeador' }))
   });
 
@@ -99,5 +113,195 @@ describe('BoxerModel', () => {
     const result = await boxerModel.create(mockData);
     expect(result).toEqual(getStateError({ error: new Error('error al crear un boxeador') }));
 
+  });
+
+  it('should  update boxers return success', async () => {
+
+    const dataMock: Boxer = {
+      id: '1',
+      name: 'John Doe',
+      id_school: 1,
+      age: 25,
+      disability: 'None',
+      id_category: 1,
+      weight: 70,
+      id_coach: 1,
+      details: 'Some details',
+      id_state: 1,
+      corner: 'Red',
+      fights: 5,
+      gender: 'Male'
+
+    };
+
+    dbTest([{ affectedRows: 1 }]);
+
+    const result = await boxerModel.update('1', dataMock);
+
+    expect(result).toEqual(getStateSuccess());
+
+  });
+
+  it('should update boxers return error', async () => {
+
+    const dataMock: Boxer = {
+      id: '1',
+      name: 'John Doe',
+      id_school: 1,
+      age: 25,
+      disability: 'None',
+      id_category: 1,
+      weight: 70,
+      id_coach: 1,
+      details: 'Some details',
+      id_state: 1,
+      corner: 'Red',
+      fights: 5,
+      gender: 'Male'
+
+    };
+
+    errorTest(new Error('error al actualizar el boxeador'));
+
+    const result = await boxerModel.update('1', dataMock);
+
+    expect(result).toEqual(getStateError({ error: new Error('error al actualizar el boxeador') }))
+  });
+
+  it('should update state return success', async () => {
+
+    dbTest([{ affectedRows: 1 }]);
+
+    const result = await boxerModel.updateState('1', 2);
+
+    expect(result).toEqual(getStateSuccess());
+  });
+
+
+  it('should update state return error', async () => {
+
+    errorTest(new Error('Boxer no encontrado'));
+    const result = await boxerModel.updateState('1', 1);
+
+    expect(result).toEqual(getStateError({ error: new Error('Boxer no encontrado') }));
+  });
+
+  it('should delete boxer return success', async () => {
+
+    dbTest([{ affectedRows: 1 }]);
+
+    const result = await boxerModel.delete('1');
+
+    expect(result).toEqual(getStateSuccess({
+      statusCode: 204,
+      message: 'Boxeador eliminado'
+    }));
+
+  });
+
+
+  it('should delete boxer return error', async () => {
+
+    errorTest(new Error('Boxer no encontrado'));
+    const result = await boxerModel.delete('1');
+    expect(result).toEqual(getStateError({ error: new Error('Boxer no encontrado') }));
+
+
+  });
+
+
+  it('should return boxer by category', async () => {
+
+    const mockBoxer = { id: '1', name: 'sebastian', id_category: 1 };
+
+    dbTest([mockBoxer]);
+
+    const result = await boxerModel.getByCategory(1);
+
+    expect(result).toEqual(getStateSuccess({ data: mockBoxer }));
+
+  });
+
+
+  it('should return boxer by category error', async () => {
+
+    errorTest(new Error('error en la base de datos'));
+
+    const result = await boxerModel.getByCategory(1);
+    expect(result).toEqual(getStateError({ error: new Error('error en la base de datos') }));
+
+  });
+
+  it('should return all boxers', async () => {
+    const dataMock = [
+      {
+        id: '1',
+        name: 'sebastian',
+        id_category: 1
+      },
+      {
+        id: '2',
+        name: 'sebastian',
+        id_category: 1
+      },
+      {
+        id: '3',
+        name: 'sebastian',
+        id_category: 1
+      }
+
+    ];
+
+    dbTest([dataMock]);
+
+    const result = await boxerModel.getAll();
+    expect(result).toEqual(getStateSuccess({ data: dataMock }));
+  });
+
+  it('should return all boxers error', async () => {
+
+    errorTest(new Error('Error al consultar los boxeadores'));
+
+    const result = await boxerModel.getAll();
+    expect(result).toEqual(getStateError({ error: new Error('Error al consultar los boxeadores') }));
+
+  });
+
+  it('should return all boxers with pagination', async () => {
+
+    const mockPagination = {
+      success: true,
+      pagination: {
+        data: [
+          { id: '1', name: 'John Doe', id_category: 1 },
+          { id: '2', name: 'Jane Doe', id_category: 2 },
+        ],
+        total: 10,
+        totalPages: 2,
+        currentPage: 1,
+        pageSize: 5,
+        next: '/api/boxers?page=2&pageSize=5',
+        prev: null,
+      },
+    };
+
+    (getPagination as jest.Mock).mockResolvedValueOnce(mockPagination);
+
+    const result = await boxerModel.getAll('1', '3');
+
+    expect(result).toEqual(getStateSuccess({
+      pagination: mockPagination.pagination
+    }))
+
+  });
+
+  it('should return all boxers with pagination error', async () => {
+    (getPagination as jest.Mock).mockRejectedValueOnce(new Error('Error de paginación'));
+
+    const result = await boxerModel.getAll('1', '5');
+
+    expect(result).toEqual(getStateError({ error: new Error('Error de paginación') }))
   })
+
+
 })
