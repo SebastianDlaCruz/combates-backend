@@ -2,6 +2,8 @@ import express from 'express';
 import request from 'supertest';
 import { BoxerController } from '../../controllers/boxer/boxer.controller';
 import { IBoxer } from '../../interfaces/boxer.interface';
+import { Boxer } from '../../models/boxer/boxer.model';
+import { getStateSuccess } from '../../utils/getStateSuccess.util';
 import { createRouterBoxer } from './boxer-route';
 
 const mockBoxer: Partial<IBoxer> = {
@@ -19,6 +21,9 @@ const boxerController = new BoxerController(mockBoxer as IBoxer);
 const app = express();
 app.use(express.json());
 app.use('/boxer', createRouterBoxer(boxerController));
+let testMethods = (func: any, data: any) => {
+  (func as jest.Mock).mockResolvedValueOnce(data);
+}
 
 describe('Boxer Routes', () => {
   afterEach(() => {
@@ -27,12 +32,9 @@ describe('Boxer Routes', () => {
 
   describe('GET BOXERS ALL', () => {
 
-    it('pagination ', async () => {
+    it('should data pagination boxers ', async () => {
 
-      const dataMock = {
-        statusCode: 200,
-        message: 'Éxito',
-        success: true,
+      const dataMock = getStateSuccess({
         pagination: {
           data: [
             { id: '1', name: 'John Doe', id_category: 1 },
@@ -45,9 +47,9 @@ describe('Boxer Routes', () => {
           next: '/api/boxers?page=2&pageSize=5',
           prev: null,
         }
-      };
+      });
 
-      (mockBoxer.getAll as jest.Mock).mockResolvedValueOnce(dataMock);
+      testMethods(mockBoxer.getAll, dataMock);
 
       const response = await request(app).get('/boxer').query(dataMock)
 
@@ -55,8 +57,119 @@ describe('Boxer Routes', () => {
       expect(response.body).toEqual(dataMock)
 
     });
+
+    it('should data boxers', async () => {
+
+      const dataMock = getStateSuccess({
+        data: [
+          { id: '1', name: 'John Doe', id_category: 1 },
+          { id: '2', name: 'Jane Doe', id_category: 2 }
+        ]
+      });
+
+      testMethods(mockBoxer.getAll, dataMock);
+
+      const response = await request(app).get('/boxer').query(dataMock);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(dataMock);
+
+    })
   })
 
+  describe('POST BOXER', () => {
 
+    it('should create boxer', async () => {
+
+      const dataMock = getStateSuccess({ statusCode: 201 });
+
+      const sendMock: Boxer = {
+        id: '1',
+        name: 'sebastian',
+        id_school: 1,
+        disability: 'nada',
+        gender: 'masculino',
+        corner: 'roja',
+        id_category: 1,
+        fights: 2,
+        weight: 64.23,
+        id_coach: 1,
+        details: 'nada',
+        id_state: 1,
+        age: 20
+      };
+
+      testMethods(mockBoxer.create, dataMock);
+
+      const response = await request(app).post('/boxer')
+        .send(sendMock);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(dataMock);
+    });
+
+    it('should error create error', async () => {
+
+      const invalidateData = {
+        name: 'Mike Tyson',
+      };
+
+      const response = await request(app).post('/boxer').
+        send(invalidateData);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+
+    });
+
+  });
+
+  describe('PUT Boxer', () => {
+
+    it('should update boxer', async () => {
+
+      const dataMock = getStateSuccess();
+
+      const sendMock: Boxer = {
+        id: '1',
+        name: 'sebastian',
+        id_school: 1,
+        disability: 'nada',
+        gender: 'masculino',
+        corner: 'roja',
+        id_category: 1,
+        fights: 2,
+        weight: 64.23,
+        id_coach: 1,
+        details: 'nada',
+        id_state: 1,
+        age: 30
+      };
+
+      testMethods(mockBoxer.update, dataMock);
+
+      const response = await request(app).patch('/boxer/1').send(sendMock);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(dataMock);
+
+    });
+
+  });
+
+  describe('DELETE Boxer', () => {
+    it('should delete boxer', async () => {
+
+      const mockResponse = getStateSuccess({ statusCode: 204 });
+
+      testMethods(boxerController.delete, mockResponse);
+
+      const response = await request(app).delete('/boxer/1');
+
+      expect(response.status).toBe(204);
+      expect(response.body).toEqual(mockResponse);
+
+    })
+  })
 
 })

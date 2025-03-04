@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { CoachController } from "../controllers/coach/coach.controller";
+import { CoachController } from "../../controllers/coach/coach.controller";
 
 
 export const createRouterCoach = (coachController: CoachController) => {

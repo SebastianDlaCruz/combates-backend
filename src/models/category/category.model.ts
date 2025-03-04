@@ -1,6 +1,6 @@
+import { PoolConnection } from "mysql2/promise";
 import { ICrud } from "../../interfaces/crud.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getConnectionDB } from "../../utils/connection-db.util";
 
 export interface Category {
   id: number;
@@ -9,12 +9,23 @@ export interface Category {
 }
 export class CategoryModel implements ICrud<Category> {
 
+  private connection: PoolConnection;
+
+  constructor(connection: PoolConnection) {
+    this.connection = connection;
+  }
+
+  private release() {
+    if (this.connection) {
+      this.connection.release();
+    }
+  }
 
   async create(data: Category): Promise<ResponseRequest> {
 
     try {
-      const connection = await getConnectionDB();
-      const [response] = await connection.query('INSERT INTO Category SET ?;', [data]);
+
+      const [response] = await this.connection.query('INSERT INTO Category SET ?;', [data]);
       if (!response) {
         throw new Error('Error al crear una categoría');
       }
@@ -32,12 +43,14 @@ export class CategoryModel implements ICrud<Category> {
         message: 'Error',
         error: error instanceof Error ? error.message : 'Error desconocido'
       }
+    } finally {
+      this.release();
     }
   }
   async update(id: number, data: Category): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
+
+      const [result] = await this.connection.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
 
       if (!result) {
         throw new Error('Categoría no encontrada');
@@ -64,8 +77,8 @@ export class CategoryModel implements ICrud<Category> {
   async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
     try {
 
-      const connection = await getConnectionDB();
-      const [response] = await connection.query('SELECT * FROM Category');
+
+      const [response] = await this.connection.query('SELECT * FROM Category');
 
       if (!response) {
         throw new Error('Error al consultar las categorías');

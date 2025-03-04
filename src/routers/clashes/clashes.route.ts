@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ClashesController } from "../controllers/clashes/clashes.controller";
+import { ClashesController } from "../../controllers/clashes/clashes.controller";
 
 
 export const createRouterClashes = (clashesController: ClashesController) => {

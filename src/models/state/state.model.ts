@@ -1,6 +1,8 @@
+import { PoolConnection } from "mysql2/promise";
 import { ICrud } from "../../interfaces/crud.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getConnectionDB } from "../../utils/connection-db.util";
+import { getStateError } from "../../utils/getStateError.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util";
 
 export interface State {
   id: number;
@@ -8,30 +10,35 @@ export interface State {
 }
 
 export class StateModel implements ICrud<State> {
+  private connection: PoolConnection;
+
+  constructor(connection: PoolConnection) {
+    this.connection = connection;
+  }
+
+  private release() {
+    if (this.connection) {
+      this.connection.release();
+    }
+  }
 
   async create(data: State): Promise<ResponseRequest> {
 
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('INSERT INTO State SET ?', [data]);
+
+      const [result] = await this.connection.query('INSERT INTO State SET ?', [data]);
 
       if (!result) {
         throw new Error('Error al crear un estado');
       }
 
-      return {
-        statusCode: 201,
-        message: 'Éxito',
-        success: true
-      }
+      return getStateSuccess({ statusCode: 201 });
+
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error })
+    } finally {
+      this.release();
     }
   }
 
@@ -44,30 +51,24 @@ export class StateModel implements ICrud<State> {
 
   async getAll(): Promise<ResponseRequest> {
     try {
-      const connection = await getConnectionDB();
-      const [result] = await connection.query('SELECT * FROM State');
+
+      const [result] = await this.connection.query('SELECT * FROM State');
 
       if (!result) {
         throw new Error('Error al consultar los estados');
       }
 
-      return {
-        statusCode: 200,
-        message: 'Éxito',
-        success: true,
-        data: result
-      }
+
+      return getStateSuccess({ data: result });
 
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error });
 
+    } finally {
+      this.release();
     }
+
   }
 
 }

@@ -46,4 +46,8 @@ export const boxerSchema = z.object({
     invalid_type_error: 'El id del estado tiene que ser un numero entero',
     required_error: 'El id del estado es requerido'
   }),
+  age: z.number({
+    invalid_type_error: 'La edad  tiene que ser un numero entero',
+    required_error: 'La edad  es requerida'
+  })
 });
