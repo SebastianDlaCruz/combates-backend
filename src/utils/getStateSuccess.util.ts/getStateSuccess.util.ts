@@ -1,5 +1,5 @@
-import { ResponseRequest } from "../interfaces/response-request.interface"
-import { Config } from "../models/request-state/request.state.model"
+import { ResponseRequest } from "../../interfaces/response-request.interface"
+import { Config } from "../../models/request-state/request.state.model"
 
 export const getStateSuccess = (config?: Config): ResponseRequest => {
 

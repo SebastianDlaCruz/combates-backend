@@ -1,13 +1,16 @@
 import { PoolConnection } from "mysql2/promise";
-import { ICrud } from "../../interfaces/crud.interface";
+import { ICategory } from "../../interfaces/category.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
+import { getStateError } from "../../utils/getStateError.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
 
 export interface Category {
   id: number;
   name: string;
   weight: number;
 }
-export class CategoryModel implements ICrud<Category> {
+
+export class CategoryModel implements ICategory {
 
   private connection: PoolConnection;
 
@@ -18,6 +21,27 @@ export class CategoryModel implements ICrud<Category> {
   private release() {
     if (this.connection) {
       this.connection.release();
+    }
+  }
+
+  async getCategory(id: number): Promise<ResponseRequest> {
+    try {
+
+      const [result] = await this.connection.query('SELECT * FROM Category WHERE id = ?', [id])
+
+      if (!result) {
+        throw new Error('Category no encontrada');
+      }
+
+      const value = result as Category[];
+      const [category] = value
+
+      return getStateSuccess({ data: category });
+
+    } catch (error) {
+      return getStateError({ error });
+    } finally {
+      this.release();
     }
   }
 
@@ -71,9 +95,27 @@ export class CategoryModel implements ICrud<Category> {
       }
     }
   }
-  delete(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async delete(id: number): Promise<ResponseRequest> {
+
+    try {
+
+      const [found] = await this.connection.query('SELECT * FROM  Category WHITE id  =  ? ', [id]);
+
+      if (!found) {
+        throw new Error('Categoria no encontrada');
+      }
+
+      const [result] = await this.connection.query('DELETE FROM Category id = ?', [id]);
+
+      return getStateSuccess({ message: 'Categoría eliminada' });
+
+    } catch (error) {
+      return getStateError({ error });
+    }
   }
+
+
   async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
     try {
 

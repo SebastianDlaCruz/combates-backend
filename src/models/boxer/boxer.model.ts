@@ -2,11 +2,9 @@ import { PoolConnection } from "mysql2/promise";
 import { IBoxer } from "../../interfaces/boxer.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../utils/pagination/pagination.util";
-interface QueryResult {
-  totalItems: number;
-}
+import { getValidateElements } from "../../utils/validateElement/validate-element.util";
 
 export interface Boxer {
   id: string;
@@ -21,7 +19,7 @@ export interface Boxer {
   id_state: number;
   corner: string;
   fights: number;
-  gender: string
+  gender: string;
 }
 
 
@@ -33,17 +31,49 @@ export class BoxerModel implements IBoxer {
     this.connection = connection;
   }
 
+
+
+
   private release() {
     if (this.connection) {
       this.connection.release();
     }
   }
 
+  async updateCorner(id: string, body: { corner: string; }): Promise<ResponseRequest> {
+    try {
+
+      const [result] = await this.connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?)', [id]);
+
+      if (!result) {
+        throw new Error('Boxeador no encontrado');
+      }
+
+      const [response] = await this.connection.query('UPDATE Boxer SET corner = ? WHERE id = UUID_TO_BIN(?)', [body.corner, id]);
+
+
+      if (!response) {
+        throw new Error('Error al actualizar la esquina');
+      }
+
+
+      return getStateSuccess();
+
+
+    } catch (error) {
+      return getStateError({ error })
+
+    } finally {
+      this.release();
+    }
+  }
+
+
   async getBoxer(id: string): Promise<ResponseRequest> {
 
     try {
 
-      const [result] = await this.connection.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
+      const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
       return getStateSuccess({
         data: result
@@ -103,11 +133,11 @@ export class BoxerModel implements IBoxer {
     }
   }
 
-  async updateState(id: string, idState: number): Promise<ResponseRequest> {
+  async updateState(id: string, idState: { state: number }): Promise<ResponseRequest> {
+
     try {
 
-
-      const [state] = await this.connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState, id]);
+      const [state] = await this.connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
       if (!state) {
         throw new Error('Error al actualizar el estado');
@@ -139,9 +169,7 @@ export class BoxerModel implements IBoxer {
 
       await this.connection.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
-
       return getStateSuccess({ statusCode: 204, message: 'Boxeador eliminado' });
-
 
     } catch (error) {
 
@@ -157,7 +185,7 @@ export class BoxerModel implements IBoxer {
 
     try {
 
-      const [result] = await this.connection.query('SELECT SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer WHERE id_category = ? ', [id_category]);
+      const [result] = await this.connection.query('SELECT  BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? ', [id_category]);
 
       if (!result) {
         throw new Error('Erro al encontrar boxeador por su categoría');
@@ -185,7 +213,7 @@ export class BoxerModel implements IBoxer {
         const responsePagination = await getPagination({
           page: parseInt(page),
           pageSize: parseInt(pageSize),
-          querySelect: 'SELECT BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer LIMIT ? OFFSET ?;',
+          querySelect: 'SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer LIMIT ? OFFSET ?;',
           queryItems: 'SELECT COUNT(*) as totalItems FROM Boxer;',
           routerApi: 'api/v1/boxer',
           connection: this.connection
@@ -205,7 +233,8 @@ export class BoxerModel implements IBoxer {
 
 
 
-      const [boxers] = await this.connection.query('SELECT  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,id_state FROM Boxer');
+      const [boxers] = await this.connection.query(`
+        SELECT  BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer`);
 
       if (!boxers) {
         throw new Error('Error al consultar los boxeadores');
@@ -224,5 +253,91 @@ export class BoxerModel implements IBoxer {
     }
   }
 
+  async search(boxer: Partial<Boxer>): Promise<ResponseRequest> {
+
+    const { id_category, name } = boxer;
+    let code = 0;
+
+    try {
+
+      if (name && name !== '') {
+
+        const valid = await getValidateElements({
+          connection: this.connection,
+          query: {
+            sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?;',
+            value: [`%${name}%`]
+          }
+        });
+
+
+        if (!valid.ok) {
+          throw new Error(valid.message);
+        }
+
+        if (!valid.response) {
+          throw new Error('Boxeador no encontrado')
+        }
+
+        const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
+
+        return getStateSuccess({ data: result });
+      }
+
+
+      if (id_category) {
+
+        const valid = await getValidateElements({
+          connection: this.connection,
+          query: {
+            sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?;',
+            value: [id_category]
+          }
+        });
+
+        if (!valid.ok) {
+          throw new Error(valid.message);
+        }
+
+        if (!valid.response) {
+          throw new Error('Boxeador no encontrado')
+        }
+
+        const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
+
+        return getStateSuccess({ data: result });
+
+      }
+
+      const valid = await getValidateElements({
+        connection: this.connection,
+        query: {
+          sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;',
+          value: [id_category, `%${name}%`]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('Boxeador no encontrado')
+      }
+
+      const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
+
+
+      return getStateSuccess({ data: result });
+
+    } catch (error) {
+
+      return getStateError({ error, statusCode: code });
+
+    } finally {
+      this.release();
+    }
+
+  }
 
 }

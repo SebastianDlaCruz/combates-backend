@@ -16,7 +16,6 @@ export class BoxerController {
     const boxers = await this.boxer.getAll(page?.toString(), pageSize?.toString());
     res.status(boxers.statusCode);
     res.json(boxers);
-
   }
 
   async create(req: Request, res: Response) {
@@ -40,12 +39,14 @@ export class BoxerController {
     const { id } = req.params;
     const result = await this.boxer.delete(id);
     res.status(result.statusCode);
-    res.json(result)
+    res.json(result);
   }
 
   async updateState(req: Request, res: Response) {
-    const { id, idState } = req.params;
-    const result = await this.boxer.updateState(id, parseInt(idState));
+    const { id } = req.params;
+    const { state } = req.body;
+
+    const result = await this.boxer.updateState(id, { state: parseInt(state) });
     res.status(result.statusCode);
     res.json(result);
   }
@@ -89,4 +90,27 @@ export class BoxerController {
   }
 
 
+  async updateCorner(req: Request, res: Response) {
+    const { id } = req.params;
+    const { corner } = req.body;
+
+    const result = await this.boxer.updateCorner(id, { corner });
+
+    res.status(result.statusCode);
+    res.json(result);
+  }
+
+
+  async search(req: Request, res: Response) {
+
+    const { id_category, name } = req.query;
+
+    const result = await this.boxer.search({
+      id_category: parseInt(id_category?.toString() ?? ''),
+      name: name?.toString()
+    });
+
+    res.status(result.statusCode);
+    res.json(result);
+  }
 }

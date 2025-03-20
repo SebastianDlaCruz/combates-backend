@@ -18,5 +18,9 @@ export const createRouterClashes = (clashesController: ClashesController) => {
     clashesController.create(req, res);
   });
 
+  clashesRouter.patch('/', (req, res) => {
+    clashesController.update(req, res);
+  });
+
   return clashesRouter;
 }

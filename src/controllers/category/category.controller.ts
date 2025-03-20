@@ -1,14 +1,14 @@
 import { Request, Response } from "express";
-import { ICrud } from "../../interfaces/crud.interface";
+import { ICategory } from "../../interfaces/category.interface";
 import { Category } from "../../models/category/category.model";
 import { categorySchema } from "../../schemas/categoty-schema";
 import { validateSchema } from "../../utils/validate-body.util";
 
 export class CategoryController {
 
-  private category: ICrud<Category>;
+  private category: ICategory;
 
-  constructor(category: ICrud<Category>) {
+  constructor(category: ICategory) {
     this.category = category;
   }
 
@@ -57,6 +57,20 @@ export class CategoryController {
       res.status(result.statusCode);
       res.json(result);
     }
+  }
+
+  async delete(req: Request, res: Response) {
+    const { id } = req.params;
+    const result = await this.category.delete(parseInt(id));
+    res.status(result.statusCode);
+    res.json(result);
+  }
+
+  async getCategory(req: Request, res: Response) {
+    const { id } = req.params;
+    const result = await this.category.getCategory(parseInt(id));
+    res.status(result.statusCode);
+    res.json(result);
   }
 
 }

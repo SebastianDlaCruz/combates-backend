@@ -1,6 +1,6 @@
 import { PoolConnection } from "mysql2/promise";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../utils/pagination/pagination.util";
 import { Boxer, BoxerModel } from "./boxer.model";
 
@@ -171,8 +171,8 @@ describe('BoxerModel', () => {
   it('should update state return success', async () => {
 
     dbTest([{ affectedRows: 1 }]);
-
-    const result = await boxerModel.updateState('1', 2);
+    const state = { state: 1 };
+    const result = await boxerModel.updateState('1', state);
 
     expect(result).toEqual(getStateSuccess());
   });
@@ -181,7 +181,8 @@ describe('BoxerModel', () => {
   it('should update state return error', async () => {
 
     errorTest(new Error('Boxer no encontrado'));
-    const result = await boxerModel.updateState('1', 1);
+    const state = { state: 1 };
+    const result = await boxerModel.updateState('1', state);
 
     expect(result).toEqual(getStateError({ error: new Error('Boxer no encontrado') }));
   });

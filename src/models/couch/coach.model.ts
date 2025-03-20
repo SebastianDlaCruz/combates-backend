@@ -1,8 +1,9 @@
 import { PoolConnection } from "mysql2/promise";
-import { ICoach } from "../../interfaces/coach.interface";
+import { ICrud } from "../../interfaces/crud.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getPagination } from "../../utils/pagination/pagination.util";
 
 export interface Coach {
   id: number;
@@ -10,21 +11,22 @@ export interface Coach {
   id_school: string;
 }
 
-export class CoachModel implements ICoach {
+export class CoachModel implements ICrud<Coach> {
+
   private connection: PoolConnection;
+
   constructor(connection: PoolConnection) {
     this.connection = connection;
   }
 
-  getCoach(id: string): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
-  }
 
   private release() {
     if (this.connection) {
       this.connection.release();
     }
   }
+
+
   async create(data: Coach): Promise<ResponseRequest> {
     try {
 
@@ -42,14 +44,87 @@ export class CoachModel implements ICoach {
     }
   }
 
-  update(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+  async update(id: number, data: Coach): Promise<ResponseRequest> {
+
+    try {
+
+      const [found] = await this.connection.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+
+      if (!found) {
+        throw new Error('No se encontró el profesor');
+      }
+
+      const { id_school, name } = data;
+
+      await this.connection.query('UPDATE Coach name = ? , id_school = ? WHERE id = ?', [name, id_school, id]);
+
+      return getStateSuccess();
+
+    } catch (error) {
+
+      return getStateError({ error });
+
+    } finally {
+      this.release();
+    }
+
   }
-  delete(id: string | number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async delete(id: number): Promise<ResponseRequest> {
+
+    try {
+
+      const [found] = await this.connection.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+
+      if (!found) {
+        throw new Error('No se encontró el profesor');
+      }
+
+      await this.connection.query('DELETE FROM Coach WHERE id = ?', [id]);
+
+      return getStateSuccess();
+
+    } catch (error) {
+
+      return getStateError({ error });
+    } finally {
+      this.release();
+    }
+
   }
-  getAll(): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+
+  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
+
+    try {
+
+      if (page && pageSize) {
+        const responsePagination = await getPagination({
+          connection: this.connection,
+          page: parseInt(page),
+          pageSize: parseInt(pageSize),
+          queryItems: 'SELECT * FROM Coach LIMIT ? OFFSET ?;',
+          querySelect: 'SELECT COUNT(*) as totalItems FROM Boxer;',
+          routerApi: 'api/v1/coach'
+        });
+
+        if (!responsePagination.success) {
+          throw new Error('Error al devolver la paginacion de los boxeadores');
+        }
+
+        if (responsePagination.success) {
+
+          return getStateSuccess({ pagination: responsePagination.pagination });
+        }
+      }
+
+      const [result] = await this.connection.query('SELECT * FROM Coach');
+      return getStateSuccess({ data: result });
+    } catch (error) {
+      return getStateError({ error });
+
+    } finally {
+      this.release();
+    }
   }
 
 }

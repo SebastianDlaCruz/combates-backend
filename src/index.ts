@@ -20,9 +20,11 @@ import { createRouterSchool } from './routers/school/school-route';
 import { createRouterState } from './routers/state/state.route';
 import { getConnectionDB } from './utils/connection-db.util';
 
+
 (async () => {
 
   try {
+
     const { PORT } = process.env;
 
     const app = express();
@@ -42,17 +44,12 @@ import { getConnectionDB } from './utils/connection-db.util';
     const port = PORT || 3000;
 
     app.listen(port, () => {
-      console.log(`Run server  http://localhost::${port}`)
-    })
-
+      console.log(`Run server  http://127.0.0.1:${port}`)
+    });
 
   } catch (error) {
     console.error(error);
   }
 
-
-
 })();
-
-
 

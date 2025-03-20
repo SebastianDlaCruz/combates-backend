@@ -3,7 +3,8 @@ import request from 'supertest';
 import { BoxerController } from '../../controllers/boxer/boxer.controller';
 import { IBoxer } from '../../interfaces/boxer.interface';
 import { Boxer } from '../../models/boxer/boxer.model';
-import { getStateSuccess } from '../../utils/getStateSuccess.util';
+import { getStateError } from '../../utils/getStateError.util';
+import { getStateSuccess } from '../../utils/getStateSuccess.util.ts/getStateSuccess.util';
 import { createRouterBoxer } from './boxer-route';
 
 const mockBoxer: Partial<IBoxer> = {
@@ -21,11 +22,13 @@ const boxerController = new BoxerController(mockBoxer as IBoxer);
 const app = express();
 app.use(express.json());
 app.use('/boxer', createRouterBoxer(boxerController));
+
 let testMethods = (func: any, data: any) => {
   (func as jest.Mock).mockResolvedValueOnce(data);
 }
 
 describe('Boxer Routes', () => {
+
   afterEach(() => {
     jest.clearAllMocks();
   })
@@ -158,18 +161,32 @@ describe('Boxer Routes', () => {
   });
 
   describe('DELETE Boxer', () => {
-    it('should delete boxer', async () => {
 
-      const mockResponse = getStateSuccess({ statusCode: 204 });
+    it('should delete boxer success', async () => {
 
-      testMethods(boxerController.delete, mockResponse);
+      const mockResponse = getStateSuccess({ statusCode: 201 });
+
+      testMethods(mockBoxer.delete, mockResponse);
 
       const response = await request(app).delete('/boxer/1');
 
-      expect(response.status).toBe(204);
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual(mockResponse);
+    });
+
+    it('should delete boxer error', async () => {
+      const mockResponse = getStateError();
+
+      testMethods(mockBoxer.delete, mockResponse);
+
+      const response = await request(app).delete('/boxer/1');
+
+      expect(response.status).toBe(500);
       expect(response.body).toEqual(mockResponse);
 
     })
   })
+
+
 
 })

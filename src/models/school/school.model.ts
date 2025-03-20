@@ -2,7 +2,8 @@ import { PoolConnection } from "mysql2/promise";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { ISchool } from "../../interfaces/school.interface";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getPagination } from "../../utils/pagination/pagination.util";
 
 export interface School {
   id: number;
@@ -104,9 +105,30 @@ export class SchoolModel implements ISchool {
     }
   }
 
-  async getAll(): Promise<ResponseRequest> {
+  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
 
     try {
+
+      if (page && pageSize) {
+
+        const responsePagination = await getPagination({
+          page: parseInt(page),
+          pageSize: parseInt(pageSize),
+          connection: this.connection,
+          queryItems: 'SELECT COUNT(*) AS totalItems FROM School',
+          querySelect: 'SELECT * FROM School LIMIT  ? OFFSET ? ;',
+          routerApi: 'api/v1/school'
+        });
+
+        if (!responsePagination.success) {
+          throw new Error('Error de la pagination');
+        }
+
+        if (responsePagination.success) {
+          return getStateSuccess({ pagination: responsePagination.pagination });
+        }
+
+      }
 
       const [res] = await this.connection.query('SELECT * FROM School');
 

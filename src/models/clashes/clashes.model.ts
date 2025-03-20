@@ -1,9 +1,8 @@
 import { PoolConnection } from "mysql2/promise";
 import { IClashes } from "../../interfaces/clashes.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getConnectionDB } from "../../utils/connection-db.util";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../utils/pagination/pagination.util";
 import { groupDataClashes } from "./util/group-data-clashes.util";
 
@@ -20,7 +19,7 @@ export interface Clashes {
   id_category: number;
   id_boxer_one: string;
   id_boxer_two: string;
-  id_boxer_tree?: string;
+  id_boxer_three?: string;
   id_state: string;
 }
 
@@ -41,15 +40,20 @@ export class ClashesModel implements IClashes {
   async create(data: Clashes): Promise<ResponseRequest> {
 
     try {
-      const result = await this.connection.query('INSERT INTO Clashes SET ?', [data]);
+
+
+      const { id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
+
+      const [result] = await this.connection.query(`
+        INSERT INTO Clashes (id_boxer_one,id_boxer_two,id_boxer_three,id_type_clashes,number_clashes,rounds,id_state,id_category)  VALUES ( UUID_TO_BIN(?), UUID_TO_BIN(?) , ? , ?, ?, ?, ?, ?)
+ `, [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category]);
 
       if (!result) {
         throw new Error('Error al crear el enfrentamiento');
       }
 
       return getStateSuccess({
-        data: result,
-        statusCode: 201
+        statusCode: 201,
       })
 
     } catch (error) {
@@ -59,11 +63,11 @@ export class ClashesModel implements IClashes {
     }
   }
 
-  async update(data: Clashes): Promise<ResponseRequest> {
+  async update(data: Clashes, id: number): Promise<ResponseRequest> {
     try {
-      const { id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
-      const connection = await getConnectionDB();
-      const [result] = await this.connection.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_tree = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ?', [id_boxer_one, id_boxer_two, id_boxer_tree, id_type_clashes, number_clashes, rounds, id_state, id_category]);
+      const { id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
+
+      const [result] = await this.connection.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_three = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category, id]);
 
       if (!result) {
         throw new Error('Error al actualizar el enfrentamiento');

@@ -2,7 +2,7 @@ import { PoolConnection } from "mysql2/promise";
 import { ICrud } from "../../interfaces/crud.interface";
 import { ResponseRequest } from "../../interfaces/response-request.interface";
 import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util";
+import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
 
 export interface State {
   id: number;
