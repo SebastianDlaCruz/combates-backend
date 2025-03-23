@@ -7,11 +7,16 @@ export const clashesSchema = z.object({
   }),
   id_boxer_two: z.string({
     invalid_type_error: 'El id del boxeador dos tiene que ser un uuid entero',
-    required_error: 'El iid del boxeador dos es requerido'
+    required_error: 'El id del boxeador dos es requerido'
   }),
   /*   id_boxer_three: z.string({
       invalid_type_error: 'El id del boxeador 3 tiene que ser id uuid entero'
     }), */
+
+  id_category: z.number({
+    invalid_type_error: 'El id de la categoría  que ser un numero entero',
+    required_error: 'El id de la categoría es requerido'
+  }),
   id_type_clashes: z.number({
     invalid_type_error: 'El id del tipo del enfrentamiento  que ser un numero entero',
     required_error: 'El id del tipo del enfrentamiento es requerido'

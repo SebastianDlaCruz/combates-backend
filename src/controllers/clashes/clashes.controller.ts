@@ -12,6 +12,7 @@ export class ClashesController {
   }
 
   async create(req: Request, res: Response) {
+
     const validator = validateSchema(clashesSchema, req.body);
 
     if (validator.error) {

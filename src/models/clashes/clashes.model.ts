@@ -42,11 +42,14 @@ export class ClashesModel implements IClashes {
     try {
 
 
-      const { id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
+      const { id_boxer_one, id_boxer_two, id_category, id_state, id_type_clashes, number_clashes, rounds } = data;
+
+      console.log(data);
 
       const [result] = await this.connection.query(`
-        INSERT INTO Clashes (id_boxer_one,id_boxer_two,id_boxer_three,id_type_clashes,number_clashes,rounds,id_state,id_category)  VALUES ( UUID_TO_BIN(?), UUID_TO_BIN(?) , ? , ?, ?, ?, ?, ?)
- `, [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category]);
+        INSERT INTO Clashes (id_boxer_one,id_boxer_two,id_category,id_state,id_type_clashes,number_clashes,rounds) 
+         VALUES (UUID_TO_BIN(?),UUID_TO_BIN(?),?,?,?,?,?)`
+        , [id_boxer_one, id_boxer_two, id_category, id_state, id_type_clashes, number_clashes, rounds]);
 
       if (!result) {
         throw new Error('Error al crear el enfrentamiento');

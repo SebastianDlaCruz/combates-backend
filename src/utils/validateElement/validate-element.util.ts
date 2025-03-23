@@ -13,8 +13,11 @@ interface Params {
 
 };
 
-
-
+/**
+ *  Valida si el elemento seleccionado se encuentra en la base de datos
+ * @param params 
+ * @returns {ok:boolean,response:any[]}  ok si la consulta fue exitosa y response la respuesta de la consulta 
+ */
 
 export const getValidateElements = async (params: Params) => {
 

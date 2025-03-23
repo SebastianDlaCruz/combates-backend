@@ -112,7 +112,26 @@ export class BoxerModel implements IBoxer {
 
   async update(id: string, data: Boxer): Promise<ResponseRequest> {
 
+    let code = 0;
     try {
+
+      const valid = await getValidateElements({
+        connection: this.connection,
+        query: {
+          sql: 'SELECT * Boxer WHERE id =  UUID_TO_BIN(?);',
+          value: [id]
+        }
+      })
+
+
+      if (!valid.ok) {
+        throw new Error(valid.message)
+      }
+
+      if (!valid.response) {
+        code = 400;
+        throw new Error('Boxeador no encontrado');
+      }
 
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
 
@@ -126,7 +145,8 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
       return getStateError({
-        error
+        error,
+        statusCode: code === 0 ? 500 : code
       })
     } finally {
       this.release();
@@ -134,8 +154,26 @@ export class BoxerModel implements IBoxer {
   }
 
   async updateState(id: string, idState: { state: number }): Promise<ResponseRequest> {
-
+    let code = 0;
     try {
+
+      const valid = await getValidateElements({
+        connection: this.connection,
+        query: {
+          sql: 'SELECT * Boxer WHERE id =  UUID_TO_BIN(?);',
+          value: [id]
+        }
+      })
+
+
+      if (!valid.ok) {
+        throw new Error(valid.message)
+      }
+
+      if (!valid.response) {
+        code = 400;
+        throw new Error('Boxeador no encontrado');
+      }
 
       const [state] = await this.connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
@@ -147,7 +185,7 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
       return getStateError({
-        error
+        error, statusCode: code === 0 ? 500 : code
       })
     } finally {
       this.release();
@@ -156,16 +194,29 @@ export class BoxerModel implements IBoxer {
 
 
   async delete(id: string): Promise<ResponseRequest> {
+    let code = 0;
+
     try {
 
-      const [result] = await this.connection.query('SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);', [id])
+      const valid = await getValidateElements({
+        connection: this.connection,
+        query: {
+          sql: 'SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);',
+          value: [id]
+        }
+      })
 
-      if (!result) {
-        getStateError({
-          statusCode: 400,
-          message: 'Elemento no encontrado'
-        });
+      if (!valid.ok) {
+        throw new Error(valid.message);
       }
+
+
+      if (!valid.response) {
+        code = 400;
+        throw new Error('Boxeador no encontrado');
+      }
+
+
 
       await this.connection.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
@@ -174,7 +225,8 @@ export class BoxerModel implements IBoxer {
     } catch (error) {
 
       return getStateError({
-        error
+        error,
+        statusCode: code === 0 ? 500 : code
       })
     } finally {
       this.release();
@@ -182,8 +234,26 @@ export class BoxerModel implements IBoxer {
   }
 
   async getByCategory(id_category: number): Promise<ResponseRequest> {
-
+    let code = 0;
     try {
+
+      const valid = await getValidateElements({
+        connection: this.connection,
+        query: {
+          sql: 'SELECT * Boxer WHERE id_category =  ?;',
+          value: [id_category]
+        }
+      })
+
+
+      if (!valid.ok) {
+        throw new Error(valid.message)
+      }
+
+      if (!valid.response) {
+        code = 400;
+        throw new Error('Boxeador no encontrado');
+      }
 
       const [result] = await this.connection.query('SELECT  BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? ', [id_category]);
 
@@ -197,7 +267,8 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
       return getStateError({
-        error
+        error,
+        statusCode: code === 0 ? 500 : code
       })
     } finally {
       this.release();
@@ -256,28 +327,11 @@ export class BoxerModel implements IBoxer {
   async search(boxer: Partial<Boxer>): Promise<ResponseRequest> {
 
     const { id_category, name } = boxer;
-    let code = 0;
+
 
     try {
 
       if (name && name !== '') {
-
-        const valid = await getValidateElements({
-          connection: this.connection,
-          query: {
-            sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?;',
-            value: [`%${name}%`]
-          }
-        });
-
-
-        if (!valid.ok) {
-          throw new Error(valid.message);
-        }
-
-        if (!valid.response) {
-          throw new Error('Boxeador no encontrado')
-        }
 
         const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
 
@@ -287,52 +341,25 @@ export class BoxerModel implements IBoxer {
 
       if (id_category) {
 
-        const valid = await getValidateElements({
-          connection: this.connection,
-          query: {
-            sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?;',
-            value: [id_category]
-          }
-        });
-
-        if (!valid.ok) {
-          throw new Error(valid.message);
-        }
-
-        if (!valid.response) {
-          throw new Error('Boxeador no encontrado')
-        }
-
         const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
 
         return getStateSuccess({ data: result });
-
       }
 
-      const valid = await getValidateElements({
-        connection: this.connection,
-        query: {
-          sql: 'SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;',
-          value: [id_category, `%${name}%`]
-        }
-      });
+      if ((id_category && id_category > 0) && (name && name?.length > 0)) {
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+
+        const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
+
+
+        return getStateSuccess({ data: result });
       }
 
-      if (!valid.response) {
-        throw new Error('Boxeador no encontrado')
-      }
-
-      const [result] = await this.connection.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
-
-
-      return getStateSuccess({ data: result });
+      return getStateSuccess({ data: [] });
 
     } catch (error) {
 
-      return getStateError({ error, statusCode: code });
+      return getStateError({ error });
 
     } finally {
       this.release();
