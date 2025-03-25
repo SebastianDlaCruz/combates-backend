@@ -1,22 +1,20 @@
-import cors from 'cors';
+
 import express from 'express';
-import { PoolConnection } from 'mysql2/promise';
-import { IMain } from './interfaces/main.interface';
 import { configMain } from './server.config';
 
 
-(async (config: IMain<PoolConnection>) => {
+(async (config) => {
 
   try {
 
-    const { connectionMethod, providerRouter, textRunServer, port } = config;
+    const { connectionMethod, providerRouter, textRunServer, port, corsMethod } = config;
 
     const { PORT } = process.env;
 
     const app = express();
 
     app.use(express.json());
-    app.use(cors());
+    app.use(corsMethod());
 
     const connection = await connectionMethod();
 

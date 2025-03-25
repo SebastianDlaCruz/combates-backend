@@ -16,7 +16,7 @@ interface Params {
 /**
  *  Valida si el elemento seleccionado se encuentra en la base de datos
  * @param params 
- * @returns {ok:boolean,response:any[]}  ok si la consulta fue exitosa y response la respuesta de la consulta 
+ * @returns {ok:boolean,response:any}  ok si la consulta fue exitosa y response la respuesta de la consulta 
  */
 
 export const getValidateElements = async (params: Params) => {
@@ -29,8 +29,8 @@ export const getValidateElements = async (params: Params) => {
     if (params.query) {
 
       const [result] = await params.connection.query(params.query.sql, params.query.value);
-
-      data = result as any[];
+      const mewData = result as any[];
+      data = mewData;
     }
 
     if (params.element) {
@@ -41,10 +41,9 @@ export const getValidateElements = async (params: Params) => {
 
     }
 
-
     return {
       ok: true,
-      response: data.length > 0
+      response: data.length !== 0
     };
 
 

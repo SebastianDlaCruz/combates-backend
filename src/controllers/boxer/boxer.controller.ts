@@ -12,13 +12,16 @@ export class BoxerController {
   }
 
   async getAll(req: Request, res: Response) {
+
     const { page, pageSize } = req.query;
     const boxers = await this.boxer.getAll(page?.toString(), pageSize?.toString());
     res.status(boxers.statusCode);
     res.json(boxers);
+
   }
 
   async create(req: Request, res: Response) {
+
     const result = validateSchema(boxerSchema, req.body);
     if (result.error) {
       res.status(400);
@@ -91,6 +94,7 @@ export class BoxerController {
 
 
   async updateCorner(req: Request, res: Response) {
+
     const { id } = req.params;
     const { corner } = req.body;
 

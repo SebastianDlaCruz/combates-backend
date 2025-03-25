@@ -76,16 +76,22 @@ CREATE TABLE Clashes (
   number_clashes INT NOT NULL,
   id_type_clashes INT NOT NULL,
   rounds INT NOT NULL,
-  id_boxer_one BINARY(16) NOT NULL,
-  id_boxer_two BINARY(16) NOT NULL,
-  id_boxer_three BINARY(16)  NULL,
   id_state INT NOT NULL,
-  PRIMARY KEY (id),
-  CONSTRAINT fk_clashes_boxer_one FOREIGN KEY (id_boxer_one) REFERENCES Boxer(id),
-  CONSTRAINT fk_clashes_boxer_two FOREIGN KEY (id_boxer_two) REFERENCES Boxer(id),
-  CONSTRAINT fk_clashes_boxer_three FOREIGN KEY (id_boxer_three) REFERENCES Boxer(id),
-  CONSTRAINT fk_clashes_state FOREIGN KEY (id_state) REFERENCES State_Clashes(id)
+  id_category INT NOT NULL,
+  PRIMARY KEY (id),  
+  CONSTRAINT fk_clashes_state FOREIGN KEY (id_state) REFERENCES State_Clashes(id),
+  CONSTRAINT fk_clashes_category FOREIGN KEY (id_category) REFERENCES Category (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE Clashes_Participants(
+id INT NOT NULL AUTO_INCREMENT,
+id_boxer BINARY(16) NOT NULL,
+id_clashes INT NOT NULL,
+PRIMARY KEY (id),
+FOREIGN KEY  (id_boxer) REFERENCES Boxer(id),
+FOREIGN KEY  (id_clashes) REFERENCES Clashes(id)
+);
+
 
 -- Insertar datos en la tabla Category
 INSERT INTO Category (name, weight) VALUES 
@@ -119,46 +125,27 @@ INSERT INTO State_Clashes (name) VALUES ('Programado');
 
 -- Insertar datos en la tabla Boxer
 INSERT INTO Boxer (
-  name, 
-  id_school, 
-  disability, 
-  id_category, 
-  weight, 
-  id_coach, 
-  details, 
-  id_state, 
-  fights, 
-  corner, 
-  gender, 
-  age
-) VALUES (
-  'Carlos López', 
-  1, 
-  'Ninguna', 
-  1, 
-  60.5, 
-  1, 
-  'Boxeador profesional', 
-  1, 
-  10, 
-  'Rojo', 
-  'Masculino', 
-  25
-);
+  name, id_school, disability, id_category, weight, id_coach, details, id_state, fights, corner, gender, age
+) VALUES
+  ('Juan Pérez', 1, 'Ninguna', 1, 70.5, 1, 'Detalles de Juan', 1, 10, 'Rojo', 'Masculino', 25),
+  ('Ana Gómez', 1, 'Ninguna', 2, 70.5, 1, 'Detalles de Juan', 1, 10, 'Rojo', 'Masculino', 25),
+  ('Carlos López' ,1, 'Ninguna', 3, 70.5, 1, 'Detalles de Juan', 1, 10, 'Rojo', 'Masculino', 25),
+  ('María Rodríguez',  1, 'Ninguna', 1, 70.5, 1, 'Detalles de Juan', 1, 10, 'Rojo', 'Masculino', 25);
 
 -- Insertar datos en la tabla Clashes
 INSERT INTO Clashes (
   number_clashes, 
   id_type_clashes, 
   rounds, 
-  id_boxer_one, 
-  id_boxer_two, 
-  id_state
+  id_state,
+  id_category
 ) VALUES (
   1, 
   1, 
   5, 
-  (SELECT id FROM Boxer WHERE name = 'Carlos López'), 
-  (SELECT id FROM Boxer WHERE name = 'Carlos López'), 
+  1, 
   1
 );
+
+
+SELECT * FROM Category;

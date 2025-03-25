@@ -1,11 +1,14 @@
+import cors from 'cors';
 import { PoolConnection } from "mysql2/promise";
 import { BoxerController } from "./controllers/boxer/boxer.controller";
+import { ClashesParticipantsController } from './controllers/clashes-participants/clashes-participants.controller';
 import { ClashesController } from "./controllers/clashes/clashes.controller";
 import { CoachController } from "./controllers/coach/coach.controller";
 import { SchoolController } from "./controllers/school/school.controller";
 import { StateController } from "./controllers/state/state.controller";
 import { IMain } from "./interfaces/main.interface";
 import { BoxerModel } from "./models/boxer/boxer.model";
+import { ClashesParticipantsModel } from './models/clashes-participants/clashes-participants.model';
 import { ClashesModel } from "./models/clashes/clashes.model";
 import { CoachModel } from "./models/couch/coach.model";
 import { SchoolModel } from "./models/school/school.model";
@@ -17,39 +20,48 @@ import { createRouterSchool } from "./routers/school/school-route";
 import { createRouterState } from "./routers/state/state.route";
 import { getConnectionDB } from "./utils/connection-db.util";
 
+const path = '/api/v1';
+
 export const configMain: IMain<PoolConnection> = {
   port: 3000,
   connectionMethod: getConnectionDB,
+  corsMethod: cors,
   providerRouter: [
     {
-      path: '/api/v1/boxer',
+      path: `${path}/boxer`,
       controller: BoxerController,
       model: BoxerModel,
       generateRouter: createRouterBoxer,
     },
     {
-      path: '/api/v1/coach',
+      path: `${path}/coach`,
       controller: CoachController,
       model: CoachModel,
       generateRouter: createRouterCoach,
     },
     {
-      path: '/api/v1/school',
+      path: `${path}/school`,
       controller: SchoolController,
       model: SchoolModel,
       generateRouter: createRouterSchool,
     }, {
-      path: '/api/v1/clashes',
+      path: `${path}/clashes`,
       controller: ClashesController,
       model: ClashesModel,
       generateRouter: createRouterClashes,
     }, {
 
-      path: '/api/v1/state',
+      path: `${path}/state`,
       controller: StateController,
       model: StateModel,
       generateRouter: createRouterState,
+    },
+    {
 
+      path: `${path}/clashes-participants`,
+      controller: ClashesParticipantsController,
+      model: ClashesParticipantsModel,
+      generateRouter: createRouterState,
     }
 
   ],

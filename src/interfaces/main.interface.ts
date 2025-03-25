@@ -11,6 +11,7 @@ interface ProviderRouter {
 export interface IMain<T> {
   port: number;
   connectionMethod: () => Promise<T>;
+  corsMethod: () => any;
   providerRouter: ProviderRouter[];
   textRunServer: string;
 }

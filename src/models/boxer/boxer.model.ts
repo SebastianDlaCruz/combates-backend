@@ -6,6 +6,7 @@ import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuc
 import { getPagination } from "../../utils/pagination/pagination.util";
 import { getValidateElements } from "../../utils/validateElement/validate-element.util";
 
+
 export interface Boxer {
   id: string;
   name: string;
@@ -31,14 +32,13 @@ export class BoxerModel implements IBoxer {
     this.connection = connection;
   }
 
-
-
-
   private release() {
     if (this.connection) {
       this.connection.release();
     }
   }
+
+
 
   async updateCorner(id: string, body: { corner: string; }): Promise<ResponseRequest> {
     try {
@@ -113,12 +113,13 @@ export class BoxerModel implements IBoxer {
   async update(id: string, data: Boxer): Promise<ResponseRequest> {
 
     let code = 0;
+
     try {
 
       const valid = await getValidateElements({
         connection: this.connection,
         query: {
-          sql: 'SELECT * Boxer WHERE id =  UUID_TO_BIN(?);',
+          sql: 'SELECT * FROM Boxer  WHERE id =  UUID_TO_BIN(?)',
           value: [id]
         }
       })
@@ -135,7 +136,22 @@ export class BoxerModel implements IBoxer {
 
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
 
-      const [boxer] = await this.connection.query('UPDATE Boxer name = ?,id_school = ?,disability = ?,id_category = ?,weight = ?,id_coach = ?,details = ?,id_state= ? ,corner = ? ,fights = ?,gender = ? , age = ?  WHERE id = ? ', [name, id_school, disability, id_category, weight, id_category, id_coach, details, id_state, corner, fights, gender, age, id]);
+      const [boxer] = await this.connection.query(`UPDATE Boxer
+        SET 
+         name = ?,
+         id_school = ?,
+         disability = ?,
+         id_category = ?,
+         weight = ?,
+         id_coach = ?,
+         details = ?,
+         id_state = ?,
+         corner = ? ,
+         fights = ?,
+         gender = ?, 
+         age = ?
+          WHERE 
+        id = UUID_TO_BIN(?);`, [name, id_school, disability, id_category, weight, id_coach, details, id_state, corner, fights, gender, age, id]);
 
       if (!boxer) {
         throw new Error('Error al actualizar el boxeador');
@@ -160,7 +176,7 @@ export class BoxerModel implements IBoxer {
       const valid = await getValidateElements({
         connection: this.connection,
         query: {
-          sql: 'SELECT * Boxer WHERE id =  UUID_TO_BIN(?);',
+          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?);',
           value: [id]
         }
       })
@@ -177,9 +193,6 @@ export class BoxerModel implements IBoxer {
 
       const [state] = await this.connection.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
-      if (!state) {
-        throw new Error('Error al actualizar el estado');
-      }
 
       return getStateSuccess();
 
