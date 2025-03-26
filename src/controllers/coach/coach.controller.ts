@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ICoach } from "../../interfaces/coach.interface";
+import { ICoach } from "../../lib/interfaces/coach.interface";
+import { coachSchema } from "../../lib/schemas/coach-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { Coach } from "../../models/couch/coach.model";
-import { coachSchema } from "../../schemas/coach-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class CoachController {
   private coach: ICoach;

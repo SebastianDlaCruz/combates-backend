@@ -1,9 +1,9 @@
-import { PoolConnection } from "mysql2/promise";
-import { ICrud } from "../../interfaces/crud.interface";
-import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
-import { getPagination } from "../../utils/pagination/pagination.util";
+import { IConnection } from "../../lib/interfaces/connection.interface";
+import { ICrud } from "../../lib/interfaces/crud.interface";
+import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
+import { getStateError } from "../../lib/utils/getStateError.util";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getPagination } from "../../lib/utils/pagination/pagination.util";
 
 export interface Coach {
   id: number;
@@ -13,16 +13,16 @@ export interface Coach {
 
 export class CoachModel implements ICrud<Coach> {
 
-  private connection: PoolConnection;
+  private connection: IConnection;
 
-  constructor(connection: PoolConnection) {
+  constructor(connection: IConnection) {
     this.connection = connection;
   }
 
 
   private release() {
     if (this.connection) {
-      this.connection.release();
+      this.connection.method.release();
     }
   }
 
@@ -30,7 +30,7 @@ export class CoachModel implements ICrud<Coach> {
   async create(data: Coach): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('INSERT INTO Coach SET ?', [data]);
+      const [result] = await this.connection.method.query('INSERT INTO Coach SET ?', [data]);
       if (!result) {
         throw new Error('Error al crear un entrenador')
       }
@@ -48,7 +48,7 @@ export class CoachModel implements ICrud<Coach> {
 
     try {
 
-      const [found] = await this.connection.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+      const [found] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ? ', [id]);
 
       if (!found) {
         throw new Error('No se encontró el profesor');
@@ -56,7 +56,7 @@ export class CoachModel implements ICrud<Coach> {
 
       const { id_school, name } = data;
 
-      await this.connection.query('UPDATE Coach name = ? , id_school = ? WHERE id = ?', [name, id_school, id]);
+      await this.connection.method.query('UPDATE Coach name = ? , id_school = ? WHERE id = ?', [name, id_school, id]);
 
       return getStateSuccess();
 
@@ -74,13 +74,13 @@ export class CoachModel implements ICrud<Coach> {
 
     try {
 
-      const [found] = await this.connection.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+      const [found] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ? ', [id]);
 
       if (!found) {
         throw new Error('No se encontró el profesor');
       }
 
-      await this.connection.query('DELETE FROM Coach WHERE id = ?', [id]);
+      await this.connection.method.query('DELETE FROM Coach WHERE id = ?', [id]);
 
       return getStateSuccess();
 
@@ -99,7 +99,7 @@ export class CoachModel implements ICrud<Coach> {
 
       if (page && pageSize) {
         const responsePagination = await getPagination({
-          connection: this.connection,
+          connection: this.connection.method,
           page: parseInt(page),
           pageSize: parseInt(pageSize),
           queryItems: 'SELECT * FROM Coach LIMIT ? OFFSET ?;',
@@ -117,7 +117,7 @@ export class CoachModel implements ICrud<Coach> {
         }
       }
 
-      const [result] = await this.connection.query('SELECT * FROM Coach');
+      const [result] = await this.connection.method.query('SELECT * FROM Coach');
       return getStateSuccess({ data: result });
     } catch (error) {
       return getStateError({ error });

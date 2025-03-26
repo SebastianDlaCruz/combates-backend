@@ -1,15 +1,12 @@
-import { PoolConnection } from "mysql2/promise";
-import { IClashes } from "../../interfaces/clashes.interface";
-import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
-import { getPagination } from "../../utils/pagination/pagination.util";
+import { IClashes } from "../../lib/interfaces/clashes.interface";
+import { IConnection } from "../../lib/interfaces/connection.interface";
+import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
+import { getStateError } from "../../lib/utils/getStateError.util";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { groupDataClashes } from "./util/group-data-clashes.util";
 
-interface Boxer {
-  id: string;
-  id_school: string;
-}
+
 
 export interface Clashes {
   id: number;
@@ -25,15 +22,15 @@ export interface Clashes {
 
 
 export class ClashesModel implements IClashes {
-  private connection: PoolConnection;
-  constructor(connection: PoolConnection) {
+  private connection: IConnection;
+  constructor(connection: IConnection) {
     this.connection = connection;
 
   }
 
   private release() {
     if (this.connection) {
-      this.connection.release();
+      this.connection.method.release();
     }
   }
 
@@ -46,7 +43,7 @@ export class ClashesModel implements IClashes {
 
       console.log(data);
 
-      const [result] = await this.connection.query(`
+      const [result] = await this.connection.method.query(`
         INSERT INTO Clashes (id_boxer_one,id_boxer_two,id_category,id_state,id_type_clashes,number_clashes,rounds) 
          VALUES (UUID_TO_BIN(?),UUID_TO_BIN(?),?,?,?,?,?)`
         , [id_boxer_one, id_boxer_two, id_category, id_state, id_type_clashes, number_clashes, rounds]);
@@ -66,11 +63,11 @@ export class ClashesModel implements IClashes {
     }
   }
 
-  async update(data: Clashes, id: number): Promise<ResponseRequest> {
+  async update(id: number, data: Clashes): Promise<ResponseRequest> {
     try {
       const { id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
 
-      const [result] = await this.connection.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_three = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category, id]);
+      const [result] = await this.connection.method.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_three = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category, id]);
 
       if (!result) {
         throw new Error('Error al actualizar el enfrentamiento');
@@ -102,7 +99,7 @@ export class ClashesModel implements IClashes {
           querySelect: 'SELECT Clashes.id as idClashes ,  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,weight, corner, fights, gender,details,id_state FROM Clashes JOIN Boxer ON Clashes.id_boxer_one = Boxer.id OR Clashes.id_boxer_two = Boxer.id OR Clashes.id_boxer_tree = Boxer.id LIMIT ? OFFSET ?',
           queryItems: 'SELECT COUNT(*) as totalItems FROM Clashes;',
           routerApi: '/api/v1/clashes',
-          connection: this.connection
+          connection: this.connection.method
         })
 
         if (!responsePagination.success) {
@@ -121,7 +118,7 @@ export class ClashesModel implements IClashes {
 
       }
 
-      const [result] = await this.connection.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
+      const [result] = await this.connection.method.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
 
 
       const clashes = result as any[];
@@ -143,7 +140,7 @@ export class ClashesModel implements IClashes {
   async getClashes(id: number): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('SELECT * FROM Clashes WHERE id = ?', [id]);
+      const [result] = await this.connection.method.query('SELECT * FROM Clashes WHERE id = ?', [id]);
 
       if (!result) {
         throw new Error('Error al consultar un enfrentamiento');
@@ -164,7 +161,7 @@ export class ClashesModel implements IClashes {
   async updateState(id: number, id_state: number): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('UPDATE Clashes id_state=? WHERE id = ?', [id_state, id]);
+      const [result] = await this.connection.method.query('UPDATE Clashes id_state=? WHERE id = ?', [id_state, id]);
       if (!result) {
         throw new Error('Error actualizar el estado');
       }

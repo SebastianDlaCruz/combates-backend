@@ -1,4 +1,4 @@
-import { School } from "../models/school/school.model";
+import { School } from "../../models/school/school.model";
 import { ICrud } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { IBoxer } from "../../interfaces/boxer.interface";
+import { IBoxer } from "../../lib/interfaces/boxer.interface";
+import { boxerSchema } from "../../lib/schemas/boxer-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { Boxer } from "../../models/boxer/boxer.model";
-import { boxerSchema } from "../../schemas/boxer-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class BoxerController {
   private boxer: IBoxer;

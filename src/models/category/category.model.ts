@@ -1,8 +1,8 @@
-import { PoolConnection } from "mysql2/promise";
-import { ICategory } from "../../interfaces/category.interface";
-import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { ICategory } from "../../lib/interfaces/category.interface";
+import { IConnection } from "../../lib/interfaces/connection.interface";
+import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
+import { getStateError } from "../../lib/utils/getStateError.util";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 
 export interface Category {
   id: number;
@@ -12,22 +12,22 @@ export interface Category {
 
 export class CategoryModel implements ICategory {
 
-  private connection: PoolConnection;
+  private connection: IConnection;
 
-  constructor(connection: PoolConnection) {
+  constructor(connection: IConnection) {
     this.connection = connection;
   }
 
   private release() {
-    if (this.connection) {
-      this.connection.release();
+    if (this.connection.method) {
+      this.connection.method.release();
     }
   }
 
   async getCategory(id: number): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('SELECT * FROM Category WHERE id = ?', [id])
+      const [result] = await this.connection.method.query('SELECT * FROM Category WHERE id = ?', [id])
 
       if (!result) {
         throw new Error('Category no encontrada');
@@ -49,7 +49,7 @@ export class CategoryModel implements ICategory {
 
     try {
 
-      const [response] = await this.connection.query('INSERT INTO Category SET ?;', [data]);
+      const [response] = await this.connection.method.query('INSERT INTO Category SET ?;', [data]);
       if (!response) {
         throw new Error('Error al crear una categoría');
       }
@@ -74,7 +74,7 @@ export class CategoryModel implements ICategory {
   async update(id: number, data: Category): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
+      const [result] = await this.connection.method.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
 
       if (!result) {
         throw new Error('Categoría no encontrada');
@@ -100,13 +100,13 @@ export class CategoryModel implements ICategory {
 
     try {
 
-      const [found] = await this.connection.query('SELECT * FROM  Category WHITE id  =  ? ', [id]);
+      const [found] = await this.connection.method.query('SELECT * FROM  Category WHITE id  =  ? ', [id]);
 
       if (!found) {
         throw new Error('Categoria no encontrada');
       }
 
-      const [result] = await this.connection.query('DELETE FROM Category id = ?', [id]);
+      const [result] = await this.connection.method.query('DELETE FROM Category id = ?', [id]);
 
       return getStateSuccess({ message: 'Categoría eliminada' });
 
@@ -120,7 +120,7 @@ export class CategoryModel implements ICategory {
     try {
 
 
-      const [response] = await this.connection.query('SELECT * FROM Category');
+      const [response] = await this.connection.method.query('SELECT * FROM Category');
 
       if (!response) {
         throw new Error('Error al consultar las categorías');

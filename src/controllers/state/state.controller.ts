@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ICrud } from "../../interfaces/crud.interface";
+import { ICrud } from "../../lib/interfaces/crud.interface";
+import { stateSchema } from "../../lib/schemas/state-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { State } from "../../models/state/state.model";
-import { stateSchema } from "../../schemas/state-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class StateController {
   private state: ICrud<State>;

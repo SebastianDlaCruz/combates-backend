@@ -1,8 +1,8 @@
-import { PoolConnection } from "mysql2/promise";
-import { ICrud } from "../../interfaces/crud.interface";
-import { ResponseRequest } from "../../interfaces/response-request.interface";
-import { getStateError } from "../../utils/getStateError.util";
-import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { IConnection } from "../../lib/interfaces/connection.interface";
+import { ICrud } from "../../lib/interfaces/crud.interface";
+import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
+import { getStateError } from "../../lib/utils/getStateError.util";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 
 export interface State {
   id: number;
@@ -10,15 +10,15 @@ export interface State {
 }
 
 export class StateModel implements ICrud<State> {
-  private connection: PoolConnection;
+  private connection: IConnection;
 
-  constructor(connection: PoolConnection) {
+  constructor(connection: IConnection) {
     this.connection = connection;
   }
 
   private release() {
     if (this.connection) {
-      this.connection.release();
+      this.connection.method.release();
     }
   }
 
@@ -26,7 +26,7 @@ export class StateModel implements ICrud<State> {
 
     try {
 
-      const [result] = await this.connection.query('INSERT INTO State SET ?', [data]);
+      const [result] = await this.connection.method.query('INSERT INTO State SET ?', [data]);
 
       if (!result) {
         throw new Error('Error al crear un estado');
@@ -52,7 +52,7 @@ export class StateModel implements ICrud<State> {
   async getAll(): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.query('SELECT * FROM State');
+      const [result] = await this.connection.method.query('SELECT * FROM State');
 
       if (!result) {
         throw new Error('Error al consultar los estados');

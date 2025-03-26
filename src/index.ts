@@ -19,7 +19,7 @@ import { configMain } from './server.config';
     const connection = await connectionMethod();
 
     providerRouter.forEach((data) => {
-      app.use(data.path, data.generateRouter(new data.controller(new data.model(connection))));
+      app.use(data.path, data.generateRouter(new data.controller(new data.model({ method: connection }))));
     });
     const p = PORT || port;
 

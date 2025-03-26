@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import { BoxerController } from '../../controllers/boxer/boxer.controller';
-import { IBoxer } from '../../interfaces/boxer.interface';
+import { IBoxer } from '../../lib/interfaces/boxer.interface';
 import { Boxer } from '../../models/boxer/boxer.model';
 import { getStateError } from '../../utils/getStateError.util';
 import { getStateSuccess } from '../../utils/getStateSuccess.util.ts/getStateSuccess.util';

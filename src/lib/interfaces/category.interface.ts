@@ -1,4 +1,4 @@
-import { Category } from "../models/category/category.model";
+import { Category } from "../../models/category/category.model";
 import { ICrud } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 

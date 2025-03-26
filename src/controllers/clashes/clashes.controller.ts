@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { IClashes } from "../../interfaces/clashes.interface";
+import { IClashes } from "../../lib/interfaces/clashes.interface";
+import { clashesSchema } from "../../lib/schemas/clashes-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { Clashes } from "../../models/clashes/clashes.model";
-import { clashesSchema } from "../../schemas/clashes-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class ClashesController {
 
@@ -65,7 +65,7 @@ export class ClashesController {
     }
 
     if (validator.success) {
-      const result = await this.clashes.update(validator.data as Clashes, parseInt(id));
+      const result = await this.clashes.update(parseInt(id), validator.data as Clashes);
 
       res.status(result.statusCode);
       res.json(result);

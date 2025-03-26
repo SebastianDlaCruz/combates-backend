@@ -1,4 +1,4 @@
-import { Boxer } from "../models/boxer/boxer.model";
+import { Boxer } from "../../models/boxer/boxer.model";
 import { ICrud } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 

@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ICategory } from "../../interfaces/category.interface";
+import { ICategory } from "../../lib/interfaces/category.interface";
+import { categorySchema } from "../../lib/schemas/categoty-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { Category } from "../../models/category/category.model";
-import { categorySchema } from "../../schemas/categoty-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class CategoryController {
 

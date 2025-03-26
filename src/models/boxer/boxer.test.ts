@@ -12,7 +12,8 @@ jest.mock('../../utils/pagination/pagination.util', () => ({
 describe('BoxerModel', () => {
 
   let boxerModel: BoxerModel;
-  let dbTest: <T>(data: T) => jest.Mock<any, any, any>
+
+  let dbTest: <T>(data: T) => jest.Mock<any, any, any>;
   let errorTest: (error: Error) => jest.Mock<any, any, any>;
 
   const mockConnection: Partial<PoolConnection> = {
@@ -21,7 +22,9 @@ describe('BoxerModel', () => {
   };
 
   beforeEach(() => {
+
     boxerModel = new BoxerModel(mockConnection as PoolConnection);
+
     dbTest = <T>(data: T) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data)
     errorTest = (error: Error) => (mockConnection.query as jest.Mock).mockRejectedValueOnce(error);
 
@@ -273,10 +276,6 @@ describe('BoxerModel', () => {
 
     dbTest([mockBoxer]);
 
-    jest.spyOn(utils, 'getValidateElements').mockResolvedValueOnce({
-      ok: true,
-      response: true
-    });
 
 
     const result = await boxerModel.getByCategory(1);

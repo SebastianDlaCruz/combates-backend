@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
-import { ISchool } from "../../interfaces/school.interface";
+import { ISchool } from "../../lib/interfaces/school.interface";
+import { schoolSchema } from "../../lib/schemas/school-schema";
+import { validateSchema } from "../../lib/utils/validate-body.util";
 import { School } from "../../models/school/school.model";
-import { schoolSchema } from "../../schemas/school-schema";
-import { validateSchema } from "../../utils/validate-body.util";
 
 export class SchoolController {
   private school: ISchool;
