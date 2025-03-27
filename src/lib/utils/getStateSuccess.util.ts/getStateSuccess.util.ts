@@ -1,6 +1,11 @@
 import { Config } from "../../../models/request-state/request.state.model"
 import { ResponseRequest } from "../../interfaces/response-request.interface"
 
+/**
+ *  Función que retorna un objeto con el estado de la petición exitosa
+ * @param config 
+ * @returns 
+ */
 export const getStateSuccess = (config?: Config): ResponseRequest => {
 
   if (config?.pagination) {

@@ -15,6 +15,7 @@ import { CoachModel } from "./models/couch/coach.model";
 import { SchoolModel } from "./models/school/school.model";
 import { StateModel } from "./models/state/state.model";
 import { createRouterBoxer } from "./routers/boxer/boxer-route";
+import { createRouterClashesParticipants } from './routers/clashes-participants/clashes-participants.route';
 import { createRouterClashes } from "./routers/clashes/clashes.route";
 import { createRouterCoach } from "./routers/coach/coach-route";
 import { createRouterSchool } from "./routers/school/school-route";
@@ -61,7 +62,7 @@ export const configMain: IMain<PoolConnection> = {
       path: `${path}/clashes-participants`,
       controller: ClashesParticipantsController,
       model: ClashesParticipantsModel,
-      generateRouter: createRouterState,
+      generateRouter: createRouterClashesParticipants,
     }
 
   ],

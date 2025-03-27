@@ -1,7 +1,11 @@
 import { Config } from "../../models/request-state/request.state.model"
 import { ResponseRequest } from "../interfaces/response-request.interface"
 
-
+/**
+ *  Función que retorna un objeto con el estado de error
+ * @param config 
+ * @returns 
+ */
 export const getStateError = (config?: Config): ResponseRequest => {
   return {
     statusCode: config?.statusCode ? config.statusCode : 500,

@@ -1,6 +1,6 @@
 import { Coach } from "../../models/couch/coach.model";
-import { ICrud } from "./crud.interface";
+import { ICreate, IDelete, IGetAll, IUpdate } from "./crud.interface";
 
-export interface ICoach extends ICrud<Coach> {
+export interface ICoach extends ICreate<Coach>, IUpdate<Coach>, IDelete, IGetAll {
 
 }

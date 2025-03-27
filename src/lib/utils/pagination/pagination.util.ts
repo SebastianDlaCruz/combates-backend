@@ -1,6 +1,13 @@
 import { PoolConnection } from "mysql2/promise";
 import { Pagination } from "../../interfaces/response-request.interface";
 
+
+/**
+ * Función que devuelve una pagination de items
+ * @param config
+ * @returns Promise<ResponsePagination>
+ */
+
 interface Config {
   page: number;
   pageSize: number

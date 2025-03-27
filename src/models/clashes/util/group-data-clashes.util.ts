@@ -1,5 +1,14 @@
+/**
+ * Agrupa los datos de los boxeadores por idClashes
+ *  
+ * @param data 
+ * @returns 
+ */
+
 export const groupDataClashes = (data: any[]) => {
+
   return data.reduce((acc, item) => {
+
     if (!acc[item.idClashes]) {
       acc[item.idClashes] = {
         idClashes: item.idClashes,

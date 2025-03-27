@@ -1,6 +1,9 @@
 import { Router } from "express";
 
-
+/**
+ * Interface de proveedor de rutas 
+ * 
+ */
 interface ProviderRouter {
   path: string;
   controller: any;
@@ -8,6 +11,9 @@ interface ProviderRouter {
   generateRouter: (controller: any) => Router;
 }
 
+/**
+ * Interface principal
+ */
 export interface IMain<T> {
   port: number;
   connectionMethod: () => Promise<T>;

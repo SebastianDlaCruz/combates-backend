@@ -25,13 +25,15 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
 
   async delete(id: number): Promise<ResponseRequest> {
+
     let code = 0;
+
     try {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
         query: {
-          sql: 'SELECT * FROM clashes_participants WHERE id = ?',
+          sql: 'SELECT * FROM Clashes_Participants WHERE id = ?',
           value: [id]
         }
       });
@@ -42,10 +44,10 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
       if (valid.ok) {
         code = 400;
-        throw new Error('Clashes Participants no encontrada');
+        throw new Error('Enfrentamiento no encontrada');
       }
 
-      await this.connection.method.query('DELETE FROM clashes_participants WHERE id = ?', [id]);
+      await this.connection.method.query('DELETE FROM Clashes_Participants WHERE id = ?', [id]);
 
       return getStateSuccess();
 
@@ -60,10 +62,51 @@ export class ClashesParticipantsModel implements IClashesParticipants {
   }
 
 
-  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
+  async getAll(id_category: number): Promise<ResponseRequest> {
+
     try {
 
-      const [data] = await this.connection.method.query('SELECT * FROM clashes_participants');
+      if (!id_category) {
+
+        const [data] = await this.connection.method.query(`
+          SELECT BIN_TO_UUID(Boxer.id) AS id,
+            Clashes_Participants.id as id_clashes_participants,
+            Boxer.name,
+            Boxer.id_school,
+            Boxer.age,
+            Boxer.disability,
+            Boxer.id_category,
+            Boxer.weight,
+            Boxer.id_coach,
+            Boxer.details,
+            Boxer.id_state,
+            Boxer.corner,
+            Boxer.fights,
+            Boxer.gender
+            FROM Clashes_Participants JOIN Boxer ON Clashes_Participants.id_boxer = Boxer.id `);
+
+        return getStateSuccess({ data });
+
+      }
+
+      const [data] = await this.connection.method.query(`
+        SELECT 
+          Clashes_Participants.id as id_clashes_participants,
+          BIN_TO_UUID(Boxer.id) AS id,
+          Boxer.name,
+          Boxer.id_school,
+          Boxer.age,
+          Boxer.disability,
+          Boxer.id_category,
+          Boxer.weight,
+          Boxer.id_coach,
+          Boxer.details,
+          Boxer.id_state,
+          Boxer.corner,
+          Boxer.fights,
+          Boxer.gender
+          FROM Clashes_Participants JOIN Boxer ON Clashes_Participants.id_boxer = Boxer.id 
+          WHERE Boxer.id_category = ? `, [id_category]);
 
       return getStateSuccess({
         data: data
@@ -82,10 +125,28 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
 
   async create(data: ClashesParticipants): Promise<ResponseRequest> {
-
     try {
+      const { id_boxer, id_clashes } = data;
 
-      await this.connection.method.query('INSERT INTO clashes_participants SET ?', [data]);
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?)',
+          value: [id_boxer]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message)
+      }
+
+      if (!valid.response) {
+        throw new Error('Boxeador no encontrado')
+      }
+
+      await this.connection.method.query(`
+        INSERT INTO  Clashes_Participants (id_boxer,id_clashes ) VALUES (UUID_TO_BIN(?),?)`
+        , [id_boxer, id_clashes]);
 
       return getStateSuccess({
         statusCode: 201
@@ -100,20 +161,22 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
   };
 
-  async update(id: string | number, data: ClashesParticipants): Promise<ResponseRequest> {
+  async update(id: number, data: ClashesParticipants): Promise<ResponseRequest> {
+
     let code = 0;
+
     try {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
         query: {
-          sql: 'SELECT * FROM clashes_participants WHERE id = ?',
+          sql: 'SELECT * FROM Clashes_Participants WHERE id = ?',
           value: [id]
         }
       });
 
-      if (!valid) {
-        throw new Error('Error al buscar el participante');
+      if (!valid.ok) {
+        throw new Error(valid.message);
       }
 
       if (!valid.response) {
@@ -121,8 +184,14 @@ export class ClashesParticipantsModel implements IClashesParticipants {
         throw new Error('Clashes Participants no encontrada');
       }
 
+      const { id_boxer, id_clashes } = data;
 
-
+      this.connection.method.query(` 
+        UPDATE Clashes_Participants 
+        SET
+         id_boxer = ?,
+         id_clashes = ?
+         WHERE id = ?`, [id, id_boxer, id_clashes]);
 
       return getStateSuccess();
 
@@ -135,6 +204,7 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
     }
   }
+
 
 
 

@@ -1,10 +1,10 @@
 import { Boxer } from "../../models/boxer/boxer.model";
-import { ICrud } from "./crud.interface";
+import { ICreate, IDelete, IGetAll, IUpdate } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 
 
 
-export interface IBoxer extends ICrud<Boxer> {
+export interface IBoxer extends ICreate<Boxer>, IUpdate<Boxer>, IDelete, IGetAll {
   /**
    * Actualiza el estado de un boxeador
    * @param id 

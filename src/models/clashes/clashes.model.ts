@@ -4,19 +4,17 @@ import { ResponseRequest } from "../../lib/interfaces/response-request.interface
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
+import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 import { groupDataClashes } from "./util/group-data-clashes.util";
 
 
 
 export interface Clashes {
   id: number;
-  number_clashes: number;
+  number: number;
   id_type_clashes: number;
   rounds: number;
   id_category: number;
-  id_boxer_one: string;
-  id_boxer_two: string;
-  id_boxer_three?: string;
   id_state: string;
 }
 
@@ -39,14 +37,14 @@ export class ClashesModel implements IClashes {
     try {
 
 
-      const { id_boxer_one, id_boxer_two, id_category, id_state, id_type_clashes, number_clashes, rounds } = data;
+      const { id_category, id_state, id_type_clashes, rounds, number } = data;
 
       console.log(data);
 
       const [result] = await this.connection.method.query(`
-        INSERT INTO Clashes (id_boxer_one,id_boxer_two,id_category,id_state,id_type_clashes,number_clashes,rounds) 
-         VALUES (UUID_TO_BIN(?),UUID_TO_BIN(?),?,?,?,?,?)`
-        , [id_boxer_one, id_boxer_two, id_category, id_state, id_type_clashes, number_clashes, rounds]);
+        INSERT INTO Clashes (id_category, id_state,id_type_clashes,number_clashes,rounds) 
+         VALUES (?, ?, ?, ?, ?)`
+        , [id_category, id_state, id_type_clashes, number, rounds]);
 
       if (!result) {
         throw new Error('Error al crear el enfrentamiento');
@@ -65,9 +63,10 @@ export class ClashesModel implements IClashes {
 
   async update(id: number, data: Clashes): Promise<ResponseRequest> {
     try {
-      const { id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category } = data;
 
-      const [result] = await this.connection.method.query('UPDATE Clashes id_boxer_one = ?,id_boxer_two = ?,id_boxer_three = ?,id_type_clashes = ? ,number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_boxer_one, id_boxer_two, id_boxer_three, id_type_clashes, number_clashes, rounds, id_state, id_category, id]);
+      const { id_type_clashes, number, rounds, id_state, id_category } = data;
+
+      const [result] = await this.connection.method.query('UPDATE Clashes SET id_type_clashes = ? , number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_type_clashes, number, rounds, id_state, id_category, id]);
 
       if (!result) {
         throw new Error('Error al actualizar el enfrentamiento');
@@ -82,8 +81,36 @@ export class ClashesModel implements IClashes {
     }
   }
 
-  delete(id: number): Promise<ResponseRequest> {
-    throw new Error("Method not implemented.");
+  async delete(id: number): Promise<ResponseRequest> {
+
+    try {
+
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Clashes WHERE id = ?',
+          value: [id]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error('Error al buscar el enfrentamiento');
+      }
+
+      if (valid.response) {
+        throw new Error('Error enfrentamiento no encontrado');
+      }
+
+      await this.connection.method.query('DELETE FROM Clashes WHERE id = ?', [id]);
+
+      return getStateSuccess();
+
+    } catch (error) {
+      return getStateError({ error });
+
+    } finally {
+      this.release();
+    }
   }
 
   async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
@@ -96,7 +123,7 @@ export class ClashesModel implements IClashes {
         const responsePagination = await getPagination({
           page: parseInt(page),
           pageSize: parseInt(pageSize),
-          querySelect: 'SELECT Clashes.id as idClashes ,  BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach,details,weight, corner, fights, gender,details,id_state FROM Clashes JOIN Boxer ON Clashes.id_boxer_one = Boxer.id OR Clashes.id_boxer_two = Boxer.id OR Clashes.id_boxer_tree = Boxer.id LIMIT ? OFFSET ?',
+          querySelect: `SELECT Clashes.id as idClashes ,BIN_TO_UUID(id) as id ,name,id_school,disability,id_category,weight,id_coach,details,weight, corner, fights, gender,details,id_state FROM Clashes JOIN Boxer ON Clashes.id_boxer_one = Boxer.id OR Clashes.id_boxer_two = Boxer.id OR Clashes.id_boxer_tree = Boxer.id LIMIT ? OFFSET ?`,
           queryItems: 'SELECT COUNT(*) as totalItems FROM Clashes;',
           routerApi: '/api/v1/clashes',
           connection: this.connection.method
@@ -118,7 +145,7 @@ export class ClashesModel implements IClashes {
 
       }
 
-      const [result] = await this.connection.method.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) ,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
+      const [result] = await this.connection.method.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) as id,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
 
 
       const clashes = result as any[];
@@ -140,12 +167,24 @@ export class ClashesModel implements IClashes {
   async getClashes(id: number): Promise<ResponseRequest> {
     try {
 
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Clashes WHERE id = ?',
+          value: [id]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error('Error al consultar un enfrentamiento');
+      }
+
+      if (valid.response) {
+        throw new Error('Error enfrentamiento no encontrado');
+      }
+
       const [result] = await this.connection.method.query('SELECT * FROM Clashes WHERE id = ?', [id]);
 
-      if (!result) {
-        throw new Error('Error al consultar un enfrentamiento');
-
-      }
 
       return getStateSuccess({
         data: result,
@@ -161,6 +200,22 @@ export class ClashesModel implements IClashes {
   async updateState(id: number, id_state: number): Promise<ResponseRequest> {
     try {
 
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Clashes WHERE id = ?',
+          value: [id]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error('Error al consultar un enfrentamiento');
+      }
+
+      if (valid.response) {
+        throw new Error('Error enfrentamiento no encontrado');
+      }
+
       const [result] = await this.connection.method.query('UPDATE Clashes id_state=? WHERE id = ?', [id_state, id]);
       if (!result) {
         throw new Error('Error actualizar el estado');
@@ -171,8 +226,10 @@ export class ClashesModel implements IClashes {
       });
 
     } catch (error) {
-      return getStateError({ error })
+      return getStateError({ error });
+
     } finally {
+
       this.release();
     }
   }

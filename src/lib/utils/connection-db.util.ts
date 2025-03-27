@@ -1,5 +1,10 @@
 import mysql, { createPool } from 'mysql2/promise';
 
+/**
+ * Función que se encarga de establecer la conexión a la base de datos
+ * @returns {Promise<mysql.PoolConnection>} Retorna la conexión a la base de datos
+ */
+
 const {
   HOST,
   USER,
@@ -35,7 +40,5 @@ export const getConnectionDB = async (): Promise<mysql.PoolConnection> => {
   } catch (error) {
     throw new Error('No se  puedo establecer la conexión a la base de datos')
   }
-
-
 
 }

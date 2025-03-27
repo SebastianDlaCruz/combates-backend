@@ -7,7 +7,6 @@ export const createRouterBoxer = (boxerController: BoxerController) => {
   const routerBoxer = Router();
 
   routerBoxer.get('/', (req, res) => {
-    console.log('/')
     boxerController.getAll(req, res);
   });
 
