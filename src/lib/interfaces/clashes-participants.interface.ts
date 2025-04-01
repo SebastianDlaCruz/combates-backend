@@ -5,5 +5,5 @@ import { ResponseRequest } from "./response-request.interface";
 export interface IClashesParticipants extends ICreate<ClashesParticipants>, IUpdate<ClashesParticipants>, IDelete {
 
   getAll(id_category: number): Promise<ResponseRequest>;
-
+  getClashesParticipants(id_clashes: number): Promise<ResponseRequest>
 } 

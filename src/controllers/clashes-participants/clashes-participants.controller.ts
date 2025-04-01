@@ -11,9 +11,7 @@ export class ClashesParticipantsController {
 
   async getAll(req: Request, res: Response) {
 
-    const { id_category } = req.query;
-
-    const result = await this.model.getAll(parseInt(id_category?.toString() ?? ''));
+    const result = await this.model.getAll();
 
     res.status(result.statusCode);
     res.json(result);
@@ -85,6 +83,18 @@ export class ClashesParticipantsController {
     const { id } = req.params;
 
     const result = await this.model.delete(parseInt(id?.toString() ?? ''));
+
+    res.status(result.statusCode);
+    res.json(result);
+
+  }
+
+
+  async getClashesParticipants(req: Request, res: Response) {
+
+    const { id } = req.params;
+
+    const result = await this.model.getClashesParticipants(parseInt(id?.toString() ?? ''));
 
     res.status(result.statusCode);
     res.json(result);

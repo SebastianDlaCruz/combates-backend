@@ -13,6 +13,10 @@ export const createRouterClashesParticipants = (controller: ClashesParticipantsC
     controller.create(req, res);
   });
 
+  routerClashesParticipants.get('/clashes/:id', (req, res) => {
+    controller.getClashesParticipants(req, res);
+  });
+
   routerClashesParticipants.patch('/:id', (req, res) => {
     controller.update(req, res);
   });

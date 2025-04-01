@@ -2,7 +2,6 @@
 import express from 'express';
 import { configMain } from './server.config';
 
-
 (async (config) => {
 
   try {

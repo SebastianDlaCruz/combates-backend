@@ -73,10 +73,29 @@ export class BoxerModel implements IBoxer {
 
     try {
 
-      const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?)',
+          value: [id]
+        }
+      })
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('El boxeador no encontrado')
+      }
+
+      const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
+
+      const format = result as any[];
+      const newData = format[0];
 
       return getStateSuccess({
-        data: result
+        data: newData
       })
 
     } catch (error) {

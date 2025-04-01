@@ -62,51 +62,12 @@ export class ClashesParticipantsModel implements IClashesParticipants {
   }
 
 
-  async getAll(id_category: number): Promise<ResponseRequest> {
+  async getAll(): Promise<ResponseRequest> {
 
     try {
 
-      if (!id_category) {
-
-        const [data] = await this.connection.method.query(`
-          SELECT BIN_TO_UUID(Boxer.id) AS id,
-            Clashes_Participants.id as id_clashes_participants,
-            Boxer.name,
-            Boxer.id_school,
-            Boxer.age,
-            Boxer.disability,
-            Boxer.id_category,
-            Boxer.weight,
-            Boxer.id_coach,
-            Boxer.details,
-            Boxer.id_state,
-            Boxer.corner,
-            Boxer.fights,
-            Boxer.gender
-            FROM Clashes_Participants JOIN Boxer ON Clashes_Participants.id_boxer = Boxer.id `);
-
-        return getStateSuccess({ data });
-
-      }
-
       const [data] = await this.connection.method.query(`
-        SELECT 
-          Clashes_Participants.id as id_clashes_participants,
-          BIN_TO_UUID(Boxer.id) AS id,
-          Boxer.name,
-          Boxer.id_school,
-          Boxer.age,
-          Boxer.disability,
-          Boxer.id_category,
-          Boxer.weight,
-          Boxer.id_coach,
-          Boxer.details,
-          Boxer.id_state,
-          Boxer.corner,
-          Boxer.fights,
-          Boxer.gender
-          FROM Clashes_Participants JOIN Boxer ON Clashes_Participants.id_boxer = Boxer.id 
-          WHERE Boxer.id_category = ? `, [id_category]);
+        SELECT id, BIN_TO_UUID(id_boxer) as id_boxer , id_clashes FROM Clashes_Participants`);
 
       return getStateSuccess({
         data: data
@@ -205,7 +166,37 @@ export class ClashesParticipantsModel implements IClashesParticipants {
     }
   }
 
+  async getClashesParticipants(id_clashes: number): Promise<ResponseRequest> {
+    try {
 
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Clashes_Participants WHERE id_clashes = ?',
+          value: [id_clashes]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('Enfrentamiento no encontrado')
+      }
+
+      const [result] = await this.connection.method.query('SELECT id , BIN_TO_UUID(id_boxer) as id_boxer , id_clashes FROM Clashes_Participants WHERE id_clashes = ?', [id_clashes]);
+
+      const data = result as any[];
+
+      return getStateSuccess({ data: [...data] })
+
+    } catch (error) {
+      return getStateError({ error })
+    } finally {
+      this.release();
+    }
+  }
 
 
 }

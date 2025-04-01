@@ -123,7 +123,7 @@ export class ClashesModel implements IClashes {
         const responsePagination = await getPagination({
           page: parseInt(page),
           pageSize: parseInt(pageSize),
-          querySelect: `SELECT Clashes.id as idClashes ,BIN_TO_UUID(id) as id ,name,id_school,disability,id_category,weight,id_coach,details,weight, corner, fights, gender,details,id_state FROM Clashes JOIN Boxer ON Clashes.id_boxer_one = Boxer.id OR Clashes.id_boxer_two = Boxer.id OR Clashes.id_boxer_tree = Boxer.id LIMIT ? OFFSET ?`,
+          querySelect: `SELECT * FROM Clashes`,
           queryItems: 'SELECT COUNT(*) as totalItems FROM Clashes;',
           routerApi: '/api/v1/clashes',
           connection: this.connection.method
@@ -145,14 +145,11 @@ export class ClashesModel implements IClashes {
 
       }
 
-      const [result] = await this.connection.method.query('SELECT Clashes.id as idClashes , BIN_TO_UUID(id) as id,name,id_school,disability,id_category,weight,id_coach, weight, corner, fights, gender,details,id_state ,FROM Clashes JOIN Boxer ON Clashes.idBoxerOne = Boxer.id OR Clashes.idBoxerTwo = Boxer.id OR Clashes.idBoxerTree = Boxer.id');
+      const [result] = await this.connection.method.query('SELECT * FROM Clashes');
 
 
-      const clashes = result as any[];
 
-      const group = groupDataClashes(clashes);
-
-      return getStateSuccess({ data: group });
+      return getStateSuccess({ data: result });
 
     } catch (error) {
       return getStateError({
@@ -216,7 +213,7 @@ export class ClashesModel implements IClashes {
         throw new Error('Error enfrentamiento no encontrado');
       }
 
-      const [result] = await this.connection.method.query('UPDATE Clashes id_state=? WHERE id = ?', [id_state, id]);
+      const [result] = await this.connection.method.query('UPDATE Clashes SET id_state= ? WHERE id = ?', [id_state, id]);
       if (!result) {
         throw new Error('Error actualizar el estado');
       }

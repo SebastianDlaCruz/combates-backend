@@ -1,25 +1,30 @@
 import cors from 'cors';
 import { PoolConnection } from "mysql2/promise";
 import { BoxerController } from "./controllers/boxer/boxer.controller";
+import { CategoryController } from './controllers/category/category.controller';
 import { ClashesParticipantsController } from './controllers/clashes-participants/clashes-participants.controller';
 import { ClashesController } from "./controllers/clashes/clashes.controller";
 import { CoachController } from "./controllers/coach/coach.controller";
 import { SchoolController } from "./controllers/school/school.controller";
-import { StateController } from "./controllers/state/state.controller";
+import { StateBoxerController } from './controllers/state-boxer/state-boxer.model';
+import { StateClashesController } from "./controllers/state-clashes/state-clashes.controller";
 import { IMain } from "./lib/interfaces/main.interface";
 import { getConnectionDB } from "./lib/utils/connection-db.util";
 import { BoxerModel } from "./models/boxer/boxer.model";
+import { CategoryModel } from './models/category/category.model';
 import { ClashesParticipantsModel } from './models/clashes-participants/clashes-participants.model';
 import { ClashesModel } from "./models/clashes/clashes.model";
 import { CoachModel } from "./models/couch/coach.model";
 import { SchoolModel } from "./models/school/school.model";
-import { StateModel } from "./models/state/state.model";
+import { StateBoxerModel } from './models/state-boxer/state-boxer.model';
+import { StateClashesModel } from "./models/state-clashes/state-clashes.model";
 import { createRouterBoxer } from "./routers/boxer/boxer-route";
+import { createRouterCategory } from './routers/category/category-route';
 import { createRouterClashesParticipants } from './routers/clashes-participants/clashes-participants.route';
 import { createRouterClashes } from "./routers/clashes/clashes.route";
 import { createRouterCoach } from "./routers/coach/coach-route";
 import { createRouterSchool } from "./routers/school/school-route";
-import { createRouterState } from "./routers/state/state.route";
+import { createRouterStateClashes } from "./routers/state-clashes/state-clashes.route";
 
 const path = '/api/v1';
 
@@ -33,6 +38,12 @@ export const configMain: IMain<PoolConnection> = {
       controller: BoxerController,
       model: BoxerModel,
       generateRouter: createRouterBoxer,
+    },
+    {
+      path: `${path}/category`,
+      controller: CategoryController,
+      model: CategoryModel,
+      generateRouter: createRouterCategory,
     },
     {
       path: `${path}/coach`,
@@ -52,10 +63,10 @@ export const configMain: IMain<PoolConnection> = {
       generateRouter: createRouterClashes,
     }, {
 
-      path: `${path}/state`,
-      controller: StateController,
-      model: StateModel,
-      generateRouter: createRouterState,
+      path: `${path}/state-clashes`,
+      controller: StateClashesController,
+      model: StateClashesModel,
+      generateRouter: createRouterStateClashes,
     },
     {
 
@@ -63,6 +74,12 @@ export const configMain: IMain<PoolConnection> = {
       controller: ClashesParticipantsController,
       model: ClashesParticipantsModel,
       generateRouter: createRouterClashesParticipants,
+    },
+    {
+      path: `${path}/state-boxer`,
+      controller: StateBoxerController,
+      model: StateBoxerModel,
+      generateRouter: createRouterBoxer
     }
 
   ],

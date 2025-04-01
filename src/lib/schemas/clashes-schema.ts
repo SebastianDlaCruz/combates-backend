@@ -9,7 +9,7 @@ export const clashesSchema = z.object({
     invalid_type_error: 'El id del tipo del enfrentamiento  que ser un numero entero',
     required_error: 'El id del tipo del enfrentamiento es requerido'
   }),
-  number_clashes: z.number({
+  number: z.number({
     invalid_type_error: 'El numero del enfrentamiento  que ser un numero entero',
     required_error: 'El numero del enfrentamiento es requerido'
   }),
