@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { IBoxer } from "../../lib/interfaces/boxer.interface";
-import { getStateSuccess } from "../../utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { BoxerController } from "./boxer.controller";
 
 const mockBoxer: Partial<IBoxer> = {

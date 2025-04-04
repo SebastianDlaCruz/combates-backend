@@ -12,7 +12,7 @@ describe('Clashes', () => {
   };
 
   beforeEach(() => {
-    clashesModel = new ClashesModel(mockConnection as PoolConnection);
+    clashesModel = new ClashesModel({ method: mockConnection as PoolConnection });
     dbTest = (data: any) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data);
   });
 
@@ -20,5 +20,5 @@ describe('Clashes', () => {
 
   it('should ', async () => {
 
-  })
+  });
 })

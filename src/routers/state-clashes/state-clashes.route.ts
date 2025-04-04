@@ -9,6 +9,10 @@ export const createRouterStateClashes = (stateController: StateClashesController
     stateController.getAll(req, res);
   });
 
+  stateRouter.get('/:id', (req, res) => {
+    stateController.getStateClashes(req, res);
+  });
+
   return stateRouter;
 
 };

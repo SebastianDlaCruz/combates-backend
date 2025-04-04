@@ -68,4 +68,13 @@ export class CoachController {
     }
   }
 
+  async getCoach(req: Request, res: Response) {
+    const { id } = req.params;
+
+    const result = await this.coach.getCoach(parseInt(id));
+
+    res.status(result.statusCode);
+    res.json(result);
+  }
+
 }

@@ -4,6 +4,7 @@ import { ISchool } from "../../lib/interfaces/school.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
+import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 
 export interface School {
   id: number;
@@ -28,13 +29,28 @@ export class SchoolModel implements ISchool {
   async getSchool(id: number): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.method.query('SELECT * FROM School WHERE id = ?', [id]);
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM School WHERE id = ?',
+          value: [id]
+        }
+      });
 
-      if (!result) {
-        throw new Error('Escuela no encontrada');
+      if (!valid.ok) {
+        throw new Error(valid.message);
       }
 
-      return getStateSuccess({ data: result });
+      if (!valid.response) {
+        throw new Error('Escuela no encontrada');
+
+      }
+
+      const [result] = await this.connection.method.query('SELECT * FROM School WHERE id = ?', [id]);
+
+      const newData = result as any[];
+
+      return getStateSuccess({ data: newData[0] });
 
     } catch (error) {
       return getStateError({

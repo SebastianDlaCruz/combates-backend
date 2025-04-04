@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { getStateError } from "../../lib//utils/getStateError.util";
 import { getStateSuccess } from "../../lib//utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib//utils/pagination/pagination.util";
@@ -21,6 +22,9 @@ export interface Boxer {
   fights: number;
   gender: string;
 }
+
+export type BoxerQuery = Boxer & RowDataPacket;
+
 
 
 export class BoxerModel implements IBoxer {
@@ -89,13 +93,14 @@ export class BoxerModel implements IBoxer {
         throw new Error('El boxeador no encontrado')
       }
 
-      const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
+      const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
 
-      const format = result as any[];
-      const newData = format[0];
+      if (result.length === 0) {
+        throw new Error('Error al encontrar el boxeador');
+      }
 
       return getStateSuccess({
-        data: newData
+        data: result[0]
       })
 
     } catch (error) {
@@ -112,9 +117,8 @@ export class BoxerModel implements IBoxer {
       const [result] = await this.connection.method.query('INSERT INTO Boxer SET ?', [data]);
 
       if (!result) {
-        throw new Error('Error al crear  boxeador')
+        throw new Error('Error al crear el boxeador');
       }
-
 
       return getStateSuccess({
         statusCode: 201,
@@ -124,6 +128,7 @@ export class BoxerModel implements IBoxer {
     } catch (error) {
 
       return getStateError({ error });
+
     } finally {
       this.release();
     }
@@ -172,11 +177,7 @@ export class BoxerModel implements IBoxer {
           WHERE 
         id = UUID_TO_BIN(?);`, [name, id_school, disability, id_category, weight, id_coach, details, id_state, corner, fights, gender, age, id]);
 
-      if (!boxer) {
-        throw new Error('Error al actualizar el boxeador');
-      }
-
-      return getStateSuccess();
+      return getStateSuccess({ message: 'éxito al actualizar el boxeador' });
 
     } catch (error) {
       return getStateError({
@@ -252,7 +253,7 @@ export class BoxerModel implements IBoxer {
 
       await this.connection.method.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
-      return getStateSuccess({ statusCode: 204, message: 'Boxeador eliminado' });
+      return getStateSuccess({ message: 'Boxeador eliminado' });
 
     } catch (error) {
 
@@ -335,13 +336,9 @@ export class BoxerModel implements IBoxer {
       }
 
 
-
-      const [boxers] = await this.connection.method.query(`
+      const [boxers] = await this.connection.method.query<BoxerQuery[]>(`
         SELECT  BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer`);
 
-      if (!boxers) {
-        throw new Error('Error al consultar los boxeadores');
-      }
 
       return getStateSuccess({
         data: boxers
@@ -365,7 +362,7 @@ export class BoxerModel implements IBoxer {
 
       if (name && name !== '') {
 
-        const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
+        const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
 
         return getStateSuccess({ data: result });
       }
@@ -373,7 +370,7 @@ export class BoxerModel implements IBoxer {
 
       if (id_category) {
 
-        const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
+        const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
 
         return getStateSuccess({ data: result });
       }
@@ -381,7 +378,7 @@ export class BoxerModel implements IBoxer {
       if ((id_category && id_category > 0) && (name && name?.length > 0)) {
 
 
-        const [result] = await this.connection.method.query('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
+        const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
 
 
         return getStateSuccess({ data: result });

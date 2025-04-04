@@ -2,9 +2,9 @@ import express from 'express';
 import request from 'supertest';
 import { BoxerController } from '../../controllers/boxer/boxer.controller';
 import { IBoxer } from '../../lib/interfaces/boxer.interface';
+import { getStateError } from '../../lib/utils/getStateError.util';
+import { getStateSuccess } from '../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util';
 import { Boxer } from '../../models/boxer/boxer.model';
-import { getStateError } from '../../utils/getStateError.util';
-import { getStateSuccess } from '../../utils/getStateSuccess.util.ts/getStateSuccess.util';
 import { createRouterBoxer } from './boxer-route';
 
 const mockBoxer: Partial<IBoxer> = {

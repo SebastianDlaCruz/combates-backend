@@ -1,9 +1,10 @@
+import { ICoach } from "../../lib/interfaces/coach.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
-import { ICrud } from "../../lib/interfaces/crud.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
+import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 
 export interface Coach {
   id: number;
@@ -11,13 +12,14 @@ export interface Coach {
   id_school: string;
 }
 
-export class CoachModel implements ICrud<Coach> {
+export class CoachModel implements ICoach {
 
   private connection: IConnection;
 
   constructor(connection: IConnection) {
     this.connection = connection;
   }
+
 
 
   private release() {
@@ -119,6 +121,40 @@ export class CoachModel implements ICrud<Coach> {
 
       const [result] = await this.connection.method.query('SELECT * FROM Coach');
       return getStateSuccess({ data: result });
+    } catch (error) {
+      return getStateError({ error });
+
+    } finally {
+      this.release();
+    }
+  }
+
+  async getCoach(id: number): Promise<ResponseRequest> {
+
+    try {
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Coach WHERE id = ?',
+          value: [id]
+        }
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('Error al consultar el coach');
+      }
+
+      const [result] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ?', [id]);
+      const newData = result as any[];
+
+      return getStateSuccess({
+        data: newData[0]
+      })
+
     } catch (error) {
       return getStateError({ error });
 

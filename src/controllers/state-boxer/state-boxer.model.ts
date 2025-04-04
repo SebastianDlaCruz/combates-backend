@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { IGetAll } from "../../lib/interfaces/crud.interface";
+import { IStateBoxer } from "../../lib/interfaces/state-boxer.interface";
 
 export interface StateBoxer {
   id: number;
@@ -9,9 +9,9 @@ export interface StateBoxer {
 
 export class StateBoxerController {
 
-  private model: IGetAll;
+  private model: IStateBoxer;
 
-  constructor(model: IGetAll) {
+  constructor(model: IStateBoxer) {
     this.model = model;
   }
 
@@ -21,6 +21,18 @@ export class StateBoxerController {
 
     res.status(result.statusCode);
     res.json(result);
+
+  }
+
+  async getStateBoxer(req: Request, res: Response) {
+
+    const { id } = req.params;
+
+    const result = await this.model.getStateBoxer(parseInt(id));
+
+    res.status(result.statusCode);
+    res.json(result);
+
   }
 
 

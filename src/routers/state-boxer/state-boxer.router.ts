@@ -9,5 +9,9 @@ export const createRouterStateBoxer = (controller: StateBoxerController) => {
     controller.getAll(req, res);
   });
 
+  router.get('/:id', (req, res) => {
+    controller.getStateBoxer(req, res);
+  })
+
   return router;
 }

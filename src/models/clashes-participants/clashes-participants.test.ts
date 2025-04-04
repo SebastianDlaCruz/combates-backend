@@ -2,8 +2,8 @@ import { PoolConnection } from "mysql2/promise";
 import { beforeEach } from "node:test";
 import { ClashesParticipants, ClashesParticipantsModel } from "./clashes-participants.model";
 
-jest.mock('mysql2/promise');
-jest.mock('../../utils/validateElement/validate-element.util');
+
+jest.mock('../../lib/utils/validateElement/validate-element.util');
 
 const mockConnection: Partial<PoolConnection> = {
   query: jest.fn(),
@@ -24,7 +24,7 @@ describe('ClashesParticipants', () => {
 
   beforeEach(() => {
 
-    model = new ClashesParticipantsModel(mockConnection as PoolConnection);
+    model = new ClashesParticipantsModel({ method: mockConnection as PoolConnection });
 
     dbTest = <T>(data: T) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data);
 
