@@ -1,14 +1,18 @@
+import { RowDataPacket } from "mysql2";
 import { ICategory } from "../../lib/interfaces/category.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 
 export interface Category {
   id: number;
   name: string;
   weight: number;
 }
+
+type CategoryQuery = Category & RowDataPacket;
 
 export class CategoryModel implements ICategory {
 
@@ -27,19 +31,28 @@ export class CategoryModel implements ICategory {
   async getCategory(id: number): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.method.query('SELECT * FROM Category WHERE id = ?', [id])
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        element: 'Category',
+        value: [id],
+      })
 
-      if (!result) {
-        throw new Error('Category no encontrada');
+      if (!valid.ok) {
+        throw new Error(valid.message);
       }
 
-      const value = result as Category[];
-      const [category] = value
+      if (!valid.response) {
+        throw new Error('Categoría no encontrada');
+      }
 
-      return getStateSuccess({ data: category });
+      const [result] = await this.connection.method.query<CategoryQuery[]>('SELECT * FROM Category WHERE id = ?', [id])
+
+
+      return getStateSuccess({ data: result[0] });
 
     } catch (error) {
       return getStateError({ error });
+
     } finally {
       this.release();
     }
@@ -53,20 +66,15 @@ export class CategoryModel implements ICategory {
       if (!response) {
         throw new Error('Error al crear una categoría');
       }
-      return {
-        statusCode: 201,
-        message: 'Éxito',
-        success: true
-      }
+
+      return getStateSuccess({
+        statusCode: 201
+      })
 
     } catch (error) {
 
-      return {
-        statusCode: 500,
-        success: false,
-        message: 'Error',
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error });
+
     } finally {
       this.release();
     }
@@ -74,25 +82,34 @@ export class CategoryModel implements ICategory {
   async update(id: number, data: Category): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.method.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
 
-      if (!result) {
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        element: 'Category',
+        value: [id],
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
         throw new Error('Categoría no encontrada');
       }
 
-      return {
-        statusCode: 200,
-        success: true,
+      const [result] = await this.connection.method.query('UPDATE  Category SET name = ? , weight = ? WHERE id = ?', [id, data.name, data.weight])
+
+      return getStateSuccess({
         message: 'Categoría modificada'
-      }
+      })
+
 
     } catch (error) {
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+
+      return getStateError({ error });
+
+    } finally {
+      this.release();
     }
   }
 
@@ -100,10 +117,17 @@ export class CategoryModel implements ICategory {
 
     try {
 
-      const [found] = await this.connection.method.query('SELECT * FROM  Category WHITE id  =  ? ', [id]);
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        element: 'Category',
+        value: [id],
+      });
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
 
-      if (!found) {
-        throw new Error('Categoria no encontrada');
+      if (!valid.response) {
+        throw new Error('Categoría no encontrada');
       }
 
       const [result] = await this.connection.method.query('DELETE FROM Category id = ?', [id]);
@@ -120,27 +144,12 @@ export class CategoryModel implements ICategory {
     try {
 
 
-      const [response] = await this.connection.method.query('SELECT * FROM Category');
+      const [response] = await this.connection.method.query<CategoryQuery[]>('SELECT * FROM Category');
 
-      if (!response) {
-        throw new Error('Error al consultar las categorías');
-
-      }
-
-      return {
-        statusCode: 200,
-        data: response,
-        message: 'Existo',
-        success: true,
-      }
+      return getStateSuccess({ data: response })
 
     } catch (error) {
-      return {
-        statusCode: 500,
-        message: 'Error',
-        success: false,
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }
+      return getStateError({ error });
     }
   }
 

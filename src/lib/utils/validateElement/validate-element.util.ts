@@ -9,6 +9,7 @@ interface Query {
 interface Params {
   connection: PoolConnection,
   element?: string;
+  value?: unknown[];
   query?: Query;
 
 };
@@ -33,9 +34,9 @@ export const getValidateElements = async (params: Params) => {
       data = mewData;
     }
 
-    if (params.element) {
+    if (params.element && params.value) {
 
-      const [result] = await params.connection.query(`SELECT * FROM ${params.element}`);
+      const [result] = await params.connection.query(`SELECT * FROM ${params.element}`, params.value);
 
       data = result as any[];
 

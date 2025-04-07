@@ -280,28 +280,279 @@ describe('BoxerModel', () => {
       expect(result).toEqual(mockResponse);
     });
 
+    it('should return error when deleting a boxer', async () => {
+
+      const valid = {
+        ok: false,
+        response: false,
+        message: 'Mensaje desconocido'
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error(valid.message);
+
+      const result = await boxerModel.delete(mockBoxer.id);
+
+
+      const mockResponse = getStateError({ error: mockError });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+
   });
 
-  it('should return error when deleting a boxer', async () => {
 
-    const valid = {
-      ok: false,
-      response: false,
-      message: 'Mensaje desconocido'
-    };
+  describe('getBoxer', () => {
 
-    (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+    it('should return a boxer by id successfully', async () => {
 
-    const mockError = new Error(valid.message);
+      const valid = {
+        ok: true,
+        response: true
+      };
 
-    const result = await boxerModel.delete(mockBoxer.id);
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockData = [mockBoxer];
+      mockQueryResult([mockData]);
+
+      const result = await boxerModel.getBoxer(mockBoxer.id);
+
+      const mockResponse = getStateSuccess({ data: mockData[0] });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return error when getting a boxer by id', async () => {
+
+      const valid = {
+        ok: false,
+        response: false,
+        message: 'Mensaje desconocido'
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error(valid.message);
+
+      const result = await boxerModel.getBoxer(mockBoxer.id);
 
 
-    const mockResponse = getStateError({ error: mockError });
+      const mockResponse = getStateError({ error: mockError });
 
-    expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse);
+
+    });
 
   });
 
+  describe('getByCategory', () => {
+
+    it('should return a boxer by category successfully', async () => {
+
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockData = [mockBoxer];
+      mockQueryResult([mockData]);
+
+      const result = await boxerModel.getByCategory(mockBoxer.id_category);
+
+      const mockResponse = getStateSuccess({ data: mockData });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return error when getting a boxer by category', async () => {
+
+      const valid = {
+        ok: false,
+        response: false,
+        message: 'Mensaje desconocido'
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error(valid.message);
+
+      const result = await boxerModel.getByCategory(mockBoxer.id_category);
+
+
+      const mockResponse = getStateError({ error: mockError });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+
+  });
+
+  describe('updateState', () => {
+
+    it('should update a boxer state successfully', async () => {
+
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      mockQueryResult([mockBoxer]);
+
+      const result = await boxerModel.updateState(mockBoxer.id, {
+        state: 1
+      });
+
+
+      const mockResponse = getStateSuccess({ message: 'éxito al actualizar el estado del boxeador' });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return error when updating a boxer state', async () => {
+
+      const valid = {
+        ok: false,
+        response: false,
+        message: 'Mensaje desconocido'
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error(valid.message);
+
+      const result = await boxerModel.updateState(mockBoxer.id, {
+        state: 1
+      });
+
+
+      const mockResponse = getStateError({ error: mockError });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+  });
+
+  describe('update Corner', () => {
+
+    it('should update a boxer corner successfully', async () => {
+
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      mockQueryResult([{ affectedRows: 1 }]);
+
+      const result = await boxerModel.updateCorner(mockBoxer.id, {
+        corner: 'rojo'
+      });
+
+
+      const mockResponse = getStateSuccess({ message: 'éxito al actualizar la esquina  del boxeador' });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return error when updating a boxer corner', async () => {
+
+      const valid = {
+        ok: false,
+        response: false,
+        message: 'Mensaje desconocido'
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error(valid.message);
+
+      const result = await boxerModel.updateCorner(mockBoxer.id, {
+        corner: 'rojo'
+      });
+
+
+      const mockResponse = getStateError({ error: mockError });
+
+      expect(result).toEqual(mockResponse);
+    });
+
+  });
+
+  describe('search', () => {
+
+    it('should return a boxer by name successfully', async () => {
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockData = [mockBoxer];
+      mockQueryResult([[mockData]]);
+
+      const result = await boxerModel.search({ name: mockBoxer.name });
+
+      const mockResponse = getStateSuccess({ data: [mockData] });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return a boxer by category successfully', async () => {
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockData = [mockBoxer];
+
+      mockQueryResult([[mockData]]);
+
+      const result = await boxerModel.search({ id_category: mockBoxer.id_category });
+
+      const mockResponse = getStateSuccess({ data: [mockData] });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should return a boxer by name and category successfully', async () => {
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockData = [mockBoxer];
+
+      mockQueryResult([[mockData]]);
+
+      const result = await boxerModel.search({ name: mockBoxer.name, id_category: mockBoxer.id_category });
+
+      const mockResponse = getStateSuccess({ data: [mockData] });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+  });
 
 });

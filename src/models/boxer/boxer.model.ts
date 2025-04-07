@@ -45,27 +45,35 @@ export class BoxerModel implements IBoxer {
 
 
   async updateCorner(id: string, body: { corner: string; }): Promise<ResponseRequest> {
+    let code = 500;
+
     try {
 
-      const [result] = await this.connection.method.query('SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?)', [id]);
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        query: {
+          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?)',
+          value: [id]
+        }
+      });
 
-      if (!result) {
-        throw new Error('Boxeador no encontrado');
+      if (!valid.ok) {
+        throw new Error(valid.message)
+      }
+
+      if (!valid.response) {
+        code = 400;
+        throw new Error('Boxeador no encontrado')
+
       }
 
       const [response] = await this.connection.method.query('UPDATE Boxer SET corner = ? WHERE id = UUID_TO_BIN(?)', [body.corner, id]);
 
-
-      if (!response) {
-        throw new Error('Error al actualizar la esquina');
-      }
-
-
-      return getStateSuccess();
+      return getStateSuccess({ message: 'éxito al actualizar la esquina  del boxeador' });
 
 
     } catch (error) {
-      return getStateError({ error })
+      return getStateError({ statusCode: code, error })
 
     } finally {
       this.release();
@@ -95,9 +103,6 @@ export class BoxerModel implements IBoxer {
 
       const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
 
-      if (result.length === 0) {
-        throw new Error('Error al encontrar el boxeador');
-      }
 
       return getStateSuccess({
         data: result[0]
@@ -214,7 +219,7 @@ export class BoxerModel implements IBoxer {
       const [state] = await this.connection.method.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
 
-      return getStateSuccess();
+      return getStateSuccess({ message: 'éxito al actualizar el estado del boxeador' });
 
     } catch (error) {
       return getStateError({
