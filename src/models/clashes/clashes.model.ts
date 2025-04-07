@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { IClashes } from "../../lib/interfaces/clashes.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -5,7 +6,6 @@ import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { groupDataClashes } from "./util/group-data-clashes.util";
 
 
 
@@ -16,7 +16,9 @@ export interface Clashes {
   rounds: number;
   id_category: number;
   id_state: string;
-}
+};
+
+type ClashesQuery = Clashes & RowDataPacket;
 
 
 export class ClashesModel implements IClashes {
@@ -46,9 +48,7 @@ export class ClashesModel implements IClashes {
          VALUES (?, ?, ?, ?, ?)`
         , [id_category, id_state, id_type_clashes, number, rounds]);
 
-      if (!result) {
-        throw new Error('Error al crear el enfrentamiento');
-      }
+
 
       return getStateSuccess({
         statusCode: 201,
@@ -63,6 +63,22 @@ export class ClashesModel implements IClashes {
 
   async update(id: number, data: Clashes): Promise<ResponseRequest> {
     try {
+
+
+      const valid = await getValidateElements({
+        connection: this.connection.method,
+        element: 'Clashes',
+        value: [id]
+
+      });
+
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('Enfrentamiento no encontrado');
+      }
 
       const { id_type_clashes, number, rounds, id_state, id_category } = data;
 
@@ -87,17 +103,15 @@ export class ClashesModel implements IClashes {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes',
+        value: [id]
       });
 
       if (!valid.ok) {
-        throw new Error('Error al buscar el enfrentamiento');
+        throw new Error(valid.message);
       }
 
-      if (valid.response) {
+      if (!valid.response) {
         throw new Error('Error enfrentamiento no encontrado');
       }
 
@@ -133,21 +147,13 @@ export class ClashesModel implements IClashes {
           throw new Error('Error al consultar los combates');
         }
 
-        const dataPagination = responsePagination.pagination.data as any[];
-
-        const data = groupDataClashes(dataPagination);
-
-        responsePagination.pagination.data = data;
-
         return getStateSuccess({
           pagination: responsePagination.pagination
         })
 
       }
 
-      const [result] = await this.connection.method.query('SELECT * FROM Clashes');
-
-
+      const [result] = await this.connection.method.query<ClashesQuery[]>('SELECT * FROM Clashes');
 
       return getStateSuccess({ data: result });
 
@@ -180,11 +186,11 @@ export class ClashesModel implements IClashes {
         throw new Error('Error enfrentamiento no encontrado');
       }
 
-      const [result] = await this.connection.method.query('SELECT * FROM Clashes WHERE id = ?', [id]);
+      const [result] = await this.connection.method.query<ClashesQuery[]>('SELECT * FROM Clashes WHERE id = ?', [id]);
 
 
       return getStateSuccess({
-        data: result,
+        data: result[0],
       })
 
     } catch (error) {
@@ -206,7 +212,7 @@ export class ClashesModel implements IClashes {
       });
 
       if (!valid.ok) {
-        throw new Error('Error al consultar un enfrentamiento');
+        throw new Error(valid.message);
       }
 
       if (valid.response) {
