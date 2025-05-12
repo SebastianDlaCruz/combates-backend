@@ -68,6 +68,7 @@ export class ClashesModel implements IClashes {
       const valid = await getValidateElements({
         connection: this.connection.method,
         element: 'Clashes',
+        filterBy: 'id',
         value: [id]
 
       });
@@ -104,6 +105,7 @@ export class ClashesModel implements IClashes {
       const valid = await getValidateElements({
         connection: this.connection.method,
         element: 'Clashes',
+        filterBy: 'id',
         value: [id]
       });
 
@@ -127,7 +129,7 @@ export class ClashesModel implements IClashes {
     }
   }
 
-  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
+  async getAll(page?: string, pageSize?: string, search?: string): Promise<ResponseRequest> {
 
     try {
 
@@ -172,10 +174,9 @@ export class ClashesModel implements IClashes {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {
@@ -205,28 +206,22 @@ export class ClashesModel implements IClashes {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {
         throw new Error(valid.message);
       }
 
-      if (valid.response) {
+      if (!valid.response) {
         throw new Error('Error enfrentamiento no encontrado');
       }
 
       const [result] = await this.connection.method.query('UPDATE Clashes SET id_state= ? WHERE id = ?', [id_state, id]);
-      if (!result) {
-        throw new Error('Error actualizar el estado');
-      }
 
-      return getStateSuccess({
-        data: result
-      });
+      return getStateSuccess();
 
     } catch (error) {
       return getStateError({ error });

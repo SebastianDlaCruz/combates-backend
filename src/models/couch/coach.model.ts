@@ -50,9 +50,18 @@ export class CoachModel implements ICoach {
 
     try {
 
-      const [found] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+      const result = await getValidateElements({
+        connection: this.connection.method,
+        element: 'Coach',
+        filterBy: 'id',
+        value: [id]
+      });
 
-      if (!found) {
+      if (!result.ok) {
+        throw new Error(result.message);
+      }
+
+      if (!result.response) {
         throw new Error('No se encontró el profesor');
       }
 
@@ -134,10 +143,9 @@ export class CoachModel implements ICoach {
     try {
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Coach WHERE id = ?',
-          value: [id]
-        }
+        element: 'Coach',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {

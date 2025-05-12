@@ -31,10 +31,9 @@ export class SchoolModel implements ISchool {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM School WHERE id = ?',
-          value: [id]
-        }
+        element: 'School',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {

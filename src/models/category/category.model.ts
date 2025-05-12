@@ -34,6 +34,7 @@ export class CategoryModel implements ICategory {
       const valid = await getValidateElements({
         connection: this.connection.method,
         element: 'Category',
+        filterBy: 'id',
         value: [id],
       })
 
@@ -86,6 +87,7 @@ export class CategoryModel implements ICategory {
       const valid = await getValidateElements({
         connection: this.connection.method,
         element: 'Category',
+        filterBy: 'id',
         value: [id],
       });
 
@@ -120,6 +122,7 @@ export class CategoryModel implements ICategory {
       const valid = await getValidateElements({
         connection: this.connection.method,
         element: 'Category',
+        filterBy: 'id',
         value: [id],
       });
       if (!valid.ok) {

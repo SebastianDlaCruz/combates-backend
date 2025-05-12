@@ -24,6 +24,7 @@ import { createRouterClashesParticipants } from './routers/clashes-participants/
 import { createRouterClashes } from "./routers/clashes/clashes.route";
 import { createRouterCoach } from "./routers/coach/coach-route";
 import { createRouterSchool } from "./routers/school/school-route";
+import { createRouterStateBoxer } from './routers/state-boxer/state-boxer.router';
 import { createRouterStateClashes } from "./routers/state-clashes/state-clashes.route";
 
 const path = '/api/v1';
@@ -79,7 +80,7 @@ export const configMain: IMain<PoolConnection> = {
       path: `${path}/state-boxer`,
       controller: StateBoxerController,
       model: StateBoxerModel,
-      generateRouter: createRouterBoxer
+      generateRouter: createRouterStateBoxer
     }
 
   ],

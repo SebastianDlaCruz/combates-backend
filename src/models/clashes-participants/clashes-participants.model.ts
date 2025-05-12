@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { IClashesParticipants } from "../../lib/interfaces/clashes-participants.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -10,6 +11,8 @@ export interface ClashesParticipants {
   id_boxer: string;
   id_clashes: number;
 }
+
+type ClashesParticipantsQuery = ClashesParticipants & RowDataPacket;
 
 export class ClashesParticipantsModel implements IClashesParticipants {
 
@@ -32,17 +35,16 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes_Participants WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes_Participants',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {
         throw new Error(valid.message);
       }
 
-      if (valid.ok) {
+      if (!valid.response) {
         code = 400;
         throw new Error('Enfrentamiento no encontrada');
       }
@@ -66,7 +68,7 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
     try {
 
-      const [data] = await this.connection.method.query(`
+      const [data] = await this.connection.method.query<ClashesParticipantsQuery[]>(`
         SELECT id, BIN_TO_UUID(id_boxer) as id_boxer , id_clashes FROM Clashes_Participants`);
 
       return getStateSuccess({
@@ -154,7 +156,9 @@ export class ClashesParticipantsModel implements IClashesParticipants {
          id_clashes = ?
          WHERE id = ?`, [id, id_boxer, id_clashes]);
 
-      return getStateSuccess();
+      return getStateSuccess({
+        statusCode: code !== 0 ? 500 : code
+      });
 
     } catch (error) {
 
@@ -171,10 +175,10 @@ export class ClashesParticipantsModel implements IClashesParticipants {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes_Participants WHERE id_clashes = ?',
-          value: [id_clashes]
-        }
+        element: 'Clashes_Participants',
+        filterBy: 'id_clashes',
+        value: [id_clashes]
+
       });
 
       if (!valid.ok) {

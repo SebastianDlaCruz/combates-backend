@@ -1,34 +1,44 @@
 import { PoolConnection } from "mysql2/promise";
 import { beforeEach } from "node:test";
+import { IClashesParticipants } from "../../lib/interfaces/clashes-participants.interface";
+import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 import { ClashesParticipants, ClashesParticipantsModel } from "./clashes-participants.model";
 
 
 jest.mock('../../lib/utils/validateElement/validate-element.util');
 
-const mockConnection: Partial<PoolConnection> = {
-  query: jest.fn(),
-  release: jest.fn(),
-};
-
-const mockData: ClashesParticipants = {
-  id: 1,
-  id_boxer: 'boxer_123',
-  id_clashes: 1,
-}
 
 describe('ClashesParticipants', () => {
 
-  let model: ClashesParticipantsModel;
+  let clashesParticipants: IClashesParticipants;
+  let mockConnection: jest.Mocked<Partial<PoolConnection>>;
 
-  let dbTest: <T>(data: T) => jest.Mock<any, any, any>;
+  let mockQueryResult: <T>(data: T) => jest.Mock<any, any, any>;
+  let mockQueryError: (error: Error) => jest.Mock<any, any, any>;
+
+  const mockCP: ClashesParticipants = {
+    id: 1,
+    id_boxer: 'eeee-ssss-223',
+    id_clashes: 1
+  }
 
   beforeEach(() => {
 
-    model = new ClashesParticipantsModel({ method: mockConnection as PoolConnection });
+    mockConnection = {
+      query: jest.fn(),
+      release: jest.fn()
+    };
 
-    dbTest = <T>(data: T) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data);
 
-    jest.clearAllMocks();
+    clashesParticipants = new ClashesParticipantsModel({
+      method: mockConnection as PoolConnection
+    });
+
+    mockQueryResult = <T>(data: T) => (mockConnection.query as jest.Mock).mockResolvedValueOnce(data);
+
+    mockQueryError = (error: Error) => (mockConnection.query as jest.Mock).mockRejectedValueOnce(error);
+
 
   });
 
@@ -37,16 +47,30 @@ describe('ClashesParticipants', () => {
   })
 
 
-  it('should create clashes participants', async () => {
+  describe('delete', () => {
 
-    /* dbTest([{ insetId: 1 }]); */
+    it('should delete participants correctly ', async () => {
 
-    /* const result = await model.create(mockData);
+      const valid = {
+        ok: true,
+        response: true
+      };
 
-    expect(mockConnection.query).toHaveBeenCalledWith('INSERT INTO clashes_participants SET ?', [mockData]);
 
-    expect(result).toEqual(getStateSuccess({ statusCode: 201 }))
- */
-  });
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      (mockConnection.query as jest.Mock)
+        .mockResolvedValueOnce([[mockCP]]);
+
+      const result = await clashesParticipants.delete(mockCP.id);
+
+      const mockResult = getStateSuccess();
+
+      expect(result).toEqual(mockResult);
+
+
+    })
+
+  })
 
 });

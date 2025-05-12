@@ -362,11 +362,10 @@ export class BoxerModel implements IBoxer {
 
     const { id_category, name } = boxer;
 
-
     try {
 
       if (name && name !== '') {
-
+        console.log('name', name)
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
 
         return getStateSuccess({ data: result });

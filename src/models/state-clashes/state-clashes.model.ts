@@ -49,12 +49,18 @@ export class StateClashesModel implements IStateClashes {
 
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM State_Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'State_Clashes',
+        filterBy: 'id',
+        value: [id]
       });
 
+      if (!valid.ok) {
+        throw new Error(valid.message);
+      }
+
+      if (!valid.response) {
+        throw new Error('El estado del enfrentamiento no encontrado')
+      }
 
       const [result] = await this.connection.method.query('SELECT * FROM State_Clashes WHERE id = ?', [id]);
       const newDate = result as any[];

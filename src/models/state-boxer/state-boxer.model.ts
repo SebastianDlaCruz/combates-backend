@@ -46,10 +46,9 @@ export class StateBoxerModel implements IStateBoxer {
     try {
       const valid = await getValidateElements({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM State_Boxer WHERE id = ?',
-          value: [id]
-        }
+        element: 'State_Boxer',
+        filterBy: 'id',
+        value: [id]
       });
 
       if (!valid.ok) {

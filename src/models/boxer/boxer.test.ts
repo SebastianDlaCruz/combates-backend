@@ -199,9 +199,10 @@ describe('BoxerModel', () => {
         response: true
       };
 
-      mockQueryResult([mockBoxer]);
 
       (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      mockQueryResult([mockBoxer]);
 
       const result = await boxerModel.update(mockBoxer.id, mockBoxer);
 

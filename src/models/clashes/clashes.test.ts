@@ -227,6 +227,57 @@ describe('ClashesModel', () => {
 
   });
 
+  describe('updateState', () => {
+
+    it('should update state clashes success', async () => {
+
+      const valid = {
+        ok: true,
+        response: true
+      };
+
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      mockQueryResolve([
+        {
+          affectedRows: 1,
+        },
+      ]);
+
+      const result = await clashesModel.updateState(mockClashes.id, 1);
+
+      const mockResponse = getStateSuccess();
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+    it('should update state clashes error', async () => {
+
+      const valid = {
+        ok: true,
+        response: false
+      };
+
+
+      (getValidateElements as jest.Mock).mockResolvedValueOnce(valid);
+
+      const mockError = new Error('Error enfrentamiento no encontrado');
+
+      mockQueryReject(mockError);
+
+      const result = await clashesModel.updateState(mockClashes.id, 1);
+
+      const mockResponse = getStateError({ error: mockError });
+
+      expect(result).toEqual(mockResponse);
+
+    });
+
+  });
+
+
 });
 
 
