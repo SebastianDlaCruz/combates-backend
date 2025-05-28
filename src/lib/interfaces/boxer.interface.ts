@@ -1,4 +1,6 @@
-import { Boxer } from "../../models/boxer/boxer.model";
+import { Boxer } from "../../models/boxer/type";
+import { InternalServerError } from "../erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../erros/not-found/not-found.error";
 import { ICreate, IDelete, IGetAll, IUpdate } from "./crud.interface";
 import { ResponseRequest } from "./response-request.interface";
 
@@ -21,7 +23,7 @@ export interface IBoxer extends ICreate<Boxer>, IUpdate<Boxer>, IDelete, IGetAll
    * Devuelve un boxeador por su id
    * @param id 
    */
-  getBoxer(id: string): Promise<ResponseRequest>;
+  getBoxer(id: string): Promise<ResponseRequest | InternalServerError | NotFoundError>;
   /**
    * Devuelve los boxeadores por categoría
    * @param id_category 

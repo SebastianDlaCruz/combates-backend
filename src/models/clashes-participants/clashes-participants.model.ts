@@ -1,3 +1,4 @@
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IClashesParticipants } from "../../lib/interfaces/clashes-participants.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -11,17 +12,14 @@ export interface ClashesParticipants {
   id_clashes: number;
 }
 
-export class ClashesParticipantsModel implements IClashesParticipants {
+export class ClashesParticipantsModel extends ConnectionDB implements IClashesParticipants {
 
-  private connection: IConnection;
+
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
   };
 
-  private release() {
-    this.connection.method.release();
-  };
 
 
   async delete(id: number): Promise<ResponseRequest> {

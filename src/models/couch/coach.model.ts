@@ -1,3 +1,4 @@
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { ICoach } from "../../lib/interfaces/coach.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -12,22 +13,13 @@ export interface Coach {
   id_school: string;
 }
 
-export class CoachModel implements ICoach {
+export class CoachModel extends ConnectionDB implements ICoach {
 
-  private connection: IConnection;
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
+
   }
-
-
-
-  private release() {
-    if (this.connection) {
-      this.connection.method.release();
-    }
-  }
-
 
   async create(data: Coach): Promise<ResponseRequest> {
     try {

@@ -1,3 +1,4 @@
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { IStateBoxer } from "../../lib/interfaces/state-boxer.interface";
@@ -11,17 +12,13 @@ export interface StateBoxer {
 };
 
 
-export class StateBoxerModel implements IStateBoxer {
+export class StateBoxerModel extends ConnectionDB implements IStateBoxer {
 
-  private connection: IConnection;
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
   }
 
-  private release() {
-    this.connection.method.release();
-  };
 
 
   async getAll(): Promise<ResponseRequest> {

@@ -1,3 +1,4 @@
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { ISchool } from "../../lib/interfaces/school.interface";
@@ -11,19 +12,12 @@ export interface School {
   name: string
 }
 
-export class SchoolModel implements ISchool {
+export class SchoolModel extends ConnectionDB implements ISchool {
 
-  private connection: IConnection;
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
 
-  }
-
-  private release() {
-    if (this.connection) {
-      this.connection.method.release();
-    }
   }
 
   async getSchool(id: number): Promise<ResponseRequest> {

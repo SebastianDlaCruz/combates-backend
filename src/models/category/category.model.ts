@@ -1,4 +1,5 @@
 import { RowDataPacket } from "mysql2";
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { ICategory } from "../../lib/interfaces/category.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -14,18 +15,11 @@ export interface Category {
 
 type CategoryQuery = Category & RowDataPacket;
 
-export class CategoryModel implements ICategory {
+export class CategoryModel extends ConnectionDB implements ICategory {
 
-  private connection: IConnection;
 
   constructor(connection: IConnection) {
-    this.connection = connection;
-  }
-
-  private release() {
-    if (this.connection.method) {
-      this.connection.method.release();
-    }
+    super(connection);
   }
 
   async getCategory(id: number): Promise<ResponseRequest> {

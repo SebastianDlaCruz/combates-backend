@@ -1,4 +1,4 @@
-import { Config } from "../../models/request-state/request.state.model"
+import { Config } from "../interfaces/request-state/request.state.model"
 import { ResponseRequest } from "../interfaces/response-request.interface"
 
 /**

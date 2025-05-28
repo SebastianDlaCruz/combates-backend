@@ -1,5 +1,6 @@
 
 import express from 'express';
+import { errorMiddleware } from './lib/middlewars/error.middleware';
 import { configMain } from './server.config';
 
 (async (config) => {
@@ -20,6 +21,9 @@ import { configMain } from './server.config';
     providerRouter.forEach((data) => {
       app.use(data.path, data.generateRouter(new data.controller(new data.model({ method: connection }))));
     });
+
+    app.use(errorMiddleware);
+
     const p = PORT || port;
 
     app.listen(port, () => {

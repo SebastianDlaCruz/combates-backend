@@ -1,4 +1,4 @@
-import { Pagination } from "../../lib/interfaces/response-request.interface";
+import { Pagination } from "../response-request.interface";
 
 export interface StateRequest {
   statusCode: number;

@@ -1,3 +1,4 @@
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { IStateClashes } from "../../lib/interfaces/state-clashes.intereface";
@@ -10,20 +11,14 @@ export interface StateClashes {
   name: string;
 }
 
-export class StateClashesModel implements IStateClashes {
+export class StateClashesModel extends ConnectionDB implements IStateClashes {
 
-  private connection: IConnection;
+
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
   }
 
-
-  private release() {
-    if (this.connection) {
-      this.connection.method.release();
-    }
-  }
 
   async getAll(): Promise<ResponseRequest> {
 

@@ -1,79 +1,54 @@
-import { RowDataPacket } from "mysql2";
-import { getStateError } from "../../lib//utils/getStateError.util";
 import { getStateSuccess } from "../../lib//utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib//utils/pagination/pagination.util";
+import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IBoxer } from "../../lib/interfaces/boxer.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { Boxer, BoxerQuery } from './type';
+import { SearchBoxer } from "./util/search-boxer/search-boxer.util";
 
-export interface Boxer {
-  id: string;
-  name: string;
-  id_school: number;
-  age: number;
-  disability: string;
-  id_category: number;
-  weight: number;
-  id_coach: number;
-  details: string
-  id_state: number;
-  corner: string;
-  fights: number;
-  gender: string;
-}
-
-export type BoxerQuery = Boxer & RowDataPacket;
+export class BoxerModel extends ConnectionDB implements IBoxer {
 
 
-
-export class BoxerModel implements IBoxer {
-
-  private connection: IConnection;
-
+  private searchBoxer: SearchBoxer;
 
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
+    this.searchBoxer = new SearchBoxer(this.connection.method);
   }
-
-  private release() {
-    if (this.connection.method) {
-      this.connection.method.release();
-    }
-  }
-
 
 
   async updateCorner(id: string, body: { corner: string; }): Promise<ResponseRequest> {
-    let code = 500;
 
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?)',
-          value: [id]
-        }
-      });
+      const valid = await this.searchBoxer.getId(id);
 
-      if (!valid.ok) {
-        throw new Error(valid.message)
-      }
-
-      if (!valid.response) {
-        code = 400;
-        throw new Error('Boxeador no encontrado')
-
+      if (valid) {
+        throw new NotFoundError('Boxeador no encontrado');
       }
 
       const [response] = await this.connection.method.query('UPDATE Boxer SET corner = ? WHERE id = UUID_TO_BIN(?)', [body.corner, id]);
+
+      if (!response) {
+        throw new Error('Error al actualizar la esquina del boxeador');
+      }
 
       return getStateSuccess({ message: 'éxito al actualizar la esquina  del boxeador' });
 
 
     } catch (error) {
-      return getStateError({ statusCode: code, error })
+
+      const messageError = error instanceof Error ? error.message : '';
+
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(messageError);
+      }
+
+      throw new InternalServerError(messageError);
+
 
     } finally {
       this.release();
@@ -81,36 +56,41 @@ export class BoxerModel implements IBoxer {
   }
 
 
-  async getBoxer(id: string): Promise<ResponseRequest> {
+  async getBoxer(id: string): Promise<ResponseRequest | InternalServerError | NotFoundError> {
+
 
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?)',
-          value: [id]
-        }
-      })
+      const valid = await this.searchBoxer.getId(id);
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
-      }
-
-      if (!valid.response) {
-        throw new Error('El boxeador no encontrado')
+      if (valid) {
+        throw new NotFoundError('Boxeador no encontrado');
       }
 
       const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
 
+      if (!result) {
+        throw new Error('Error desconocido al obtener el boxeador');
+      }
 
       return getStateSuccess({
         data: result[0]
       })
 
+
     } catch (error) {
 
-      return getStateError({ error })
+      const messageError = error instanceof Error ? error.message : '';
+
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(messageError);
+      }
+
+
+      throw new InternalServerError(messageError);
+
+
+
     } finally {
       this.release();
     }
@@ -131,8 +111,8 @@ export class BoxerModel implements IBoxer {
       })
 
     } catch (error) {
-
-      return getStateError({ error });
+      const errorMessage = error instanceof Error ? error.message : '';
+      throw new InternalServerError(errorMessage)
 
     } finally {
       this.release();
@@ -141,26 +121,13 @@ export class BoxerModel implements IBoxer {
 
   async update(id: string, data: Boxer): Promise<ResponseRequest> {
 
-    let code = 0;
-
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Boxer  WHERE id =  UUID_TO_BIN(?)',
-          value: [id]
-        }
-      })
+      const valid = await this.searchBoxer.getId(id);
 
+      if (valid) {
 
-      if (!valid.ok) {
-        throw new Error(valid.message)
-      }
-
-      if (!valid.response) {
-        code = 400;
-        throw new Error('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado');
       }
 
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
@@ -185,46 +152,42 @@ export class BoxerModel implements IBoxer {
       return getStateSuccess({ message: 'éxito al actualizar el boxeador' });
 
     } catch (error) {
-      return getStateError({
-        error,
-        statusCode: code === 0 ? 500 : code
-      })
+
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(error.message);
+      }
+      throw new InternalServerError('Error desconocido al actualizar el boxeador');
     } finally {
       this.release();
     }
   }
 
   async updateState(id: string, idState: { state: number }): Promise<ResponseRequest> {
-    let code = 0;
+
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Boxer WHERE id =  UUID_TO_BIN(?);',
-          value: [id]
-        }
-      })
+      const valid = await this.searchBoxer.getId(id);
 
-
-      if (!valid.ok) {
-        throw new Error(valid.message)
-      }
-
-      if (!valid.response) {
-        code = 400;
-        throw new Error('Boxeador no encontrado');
+      if (valid) {
+        throw new NotFoundError('Boxeador no encontrado');
       }
 
       const [state] = await this.connection.method.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
+      if (!state) {
+        throw new Error('Error al actualizar el estado del boxeador');
+      }
 
       return getStateSuccess({ message: 'éxito al actualizar el estado del boxeador' });
 
     } catch (error) {
-      return getStateError({
-        error, statusCode: code === 0 ? 500 : code
-      })
+
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(error.message);
+      }
+
+      throw new InternalServerError(error instanceof Error ? error.message : '');
+
     } finally {
       this.release();
     }
@@ -232,29 +195,15 @@ export class BoxerModel implements IBoxer {
 
 
   async delete(id: string): Promise<ResponseRequest> {
-    let code = 0;
 
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT id FROM Boxer WHERE id = UUID_TO_BIN(?);',
-          value: [id]
-        }
-      })
+      const valid = await this.searchBoxer.getId(id);
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+
+      if (valid) {
+        throw new NotFoundError('Boxeador no encontrado');
       }
-
-
-      if (!valid.response) {
-        code = 400;
-        throw new Error('Boxeador no encontrado');
-      }
-
-
 
       await this.connection.method.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
 
@@ -262,41 +211,25 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
 
-      return getStateError({
-        error,
-        statusCode: code === 0 ? 500 : code
-      })
+      if (error instanceof NotFoundError) {
+        throw new NotFoundError(error.message);
+      }
+
+      throw new InternalServerError(error instanceof Error ? error.message : 'Error desconocido al eliminar el boxeador');
+
     } finally {
       this.release();
     }
   }
 
   async getByCategory(id_category: number): Promise<ResponseRequest> {
-    let code = 0;
+
     try {
-
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * Boxer WHERE id_category =  ?;',
-          value: [id_category]
-        }
-      })
-
-
-      if (!valid.ok) {
-        throw new Error(valid.message)
-      }
-
-      if (!valid.response) {
-        code = 400;
-        throw new Error('Boxeador no encontrado');
-      }
 
       const [result] = await this.connection.method.query('SELECT  BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? ', [id_category]);
 
       if (!result) {
-        throw new Error('Erro al encontrar boxeador por su categoría');
+        throw new Error('Error al buscar a los boxeadores por categoría');
       }
 
       return getStateSuccess({
@@ -304,10 +237,9 @@ export class BoxerModel implements IBoxer {
       });
 
     } catch (error) {
-      return getStateError({
-        error,
-        statusCode: code === 0 ? 500 : code
-      })
+
+      throw new InternalServerError(error instanceof Error ? error.message : '');
+
     } finally {
       this.release();
     }
@@ -344,15 +276,20 @@ export class BoxerModel implements IBoxer {
       const [boxers] = await this.connection.method.query<BoxerQuery[]>(`
         SELECT  BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer`);
 
+      if (!boxers) {
+        throw new Error('Error al obtener los boxeadores');;
+      }
+
 
       return getStateSuccess({
         data: boxers
       });
 
     } catch (error) {
-      return getStateError({
-        error
-      })
+
+
+      throw new InternalServerError(error instanceof Error ? error.message : '');
+
     } finally {
       this.release();
     }
@@ -369,6 +306,10 @@ export class BoxerModel implements IBoxer {
 
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
 
+        if (!result) {
+          throw new Error('Error al buscar el boxeador por nombre');
+        }
+
         return getStateSuccess({ data: result });
       }
 
@@ -376,6 +317,11 @@ export class BoxerModel implements IBoxer {
       if (id_category) {
 
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
+
+
+        if (!result) {
+          throw new Error('Error al buscar el por categoría');
+        }
 
         return getStateSuccess({ data: result });
       }
@@ -386,6 +332,9 @@ export class BoxerModel implements IBoxer {
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
 
 
+        if (!result) {
+          throw new Error('Error al buscar el boxeador por nombre y categoría');
+        }
         return getStateSuccess({ data: result });
       }
 
@@ -393,7 +342,7 @@ export class BoxerModel implements IBoxer {
 
     } catch (error) {
 
-      return getStateError({ error });
+      throw new InternalServerError(error instanceof Error ? error.message : '');
 
     } finally {
       this.release();

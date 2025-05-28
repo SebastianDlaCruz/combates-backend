@@ -1,4 +1,5 @@
 import { RowDataPacket } from "mysql2";
+import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IClashes } from "../../lib/interfaces/clashes.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
@@ -21,23 +22,18 @@ export interface Clashes {
 type ClashesQuery = Clashes & RowDataPacket;
 
 
-export class ClashesModel implements IClashes {
-  private connection: IConnection;
+export class ClashesModel extends ConnectionDB implements IClashes {
+
   constructor(connection: IConnection) {
-    this.connection = connection;
+    super(connection);
+
 
   }
 
-  private release() {
-    if (this.connection) {
-      this.connection.method.release();
-    }
-  }
 
   async create(data: Clashes): Promise<ResponseRequest> {
 
     try {
-
 
       const { id_category, id_state, id_type_clashes, rounds, number } = data;
 

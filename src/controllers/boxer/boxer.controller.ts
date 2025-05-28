@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { IBoxer } from "../../lib/interfaces/boxer.interface";
 import { boxerSchema } from "../../lib/schemas/boxer-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { Boxer } from "../../models/boxer/boxer.model";
+import { Boxer } from "../../models/boxer/type";
 
 export class BoxerController {
   private boxer: IBoxer;
@@ -11,7 +11,7 @@ export class BoxerController {
     this.boxer = boxer;
   }
 
-  async getAll(req: Request, res: Response) {
+  async getAll(req: Request, res: Response, next: NextFunction) {
 
     const { page, pageSize } = req.query;
     const boxers = await this.boxer.getAll(page?.toString(), pageSize?.toString());
@@ -54,12 +54,19 @@ export class BoxerController {
     res.json(result);
   }
 
-  async getBoxer(req: Request, res: Response) {
-    const { id } = req.params;
-    const result = await this.boxer.getBoxer(id);
+  async getBoxer(req: Request, res: Response, next: NextFunction) {
 
-    res.status(result.statusCode);
-    res.json(result);
+    try {
+
+      const { id } = req.params;
+      const result = await this.boxer.getBoxer(id);
+
+      res.status(result.statusCode);
+      res.json(result);
+
+    } catch (error) {
+      next(error);
+    }
   }
 
   async update(req: Request, res: Response) {
