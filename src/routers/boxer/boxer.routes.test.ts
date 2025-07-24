@@ -5,7 +5,7 @@ import { IBoxer } from '../../lib/interfaces/boxer.interface';
 import { getStateError } from '../../lib/utils/getStateError.util';
 import { getStateSuccess } from '../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util';
 import { Boxer } from '../../models/boxer/boxer.model';
-import { createRouterBoxer } from './boxer-route';
+import { createRouterBoxer } from './boxer.router';
 
 const mockBoxer: Partial<IBoxer> = {
   getAll: jest.fn(),

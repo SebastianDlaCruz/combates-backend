@@ -18,13 +18,13 @@ import { CoachModel } from "./models/couch/coach.model";
 import { SchoolModel } from "./models/school/school.model";
 import { StateBoxerModel } from './models/state-boxer/state-boxer.model';
 import { StateClashesModel } from "./models/state-clashes/state-clashes.model";
-import { createRouterBoxer } from "./routers/boxer/boxer-route";
-import { createRouterCategory } from './routers/category/category-route';
-import { createRouterClashesParticipants } from './routers/clashes-participants/clashes-participants.route';
-import { createRouterClashes } from "./routers/clashes/clashes.route";
-import { createRouterCoach } from "./routers/coach/coach-route";
-import { createRouterSchool } from "./routers/school/school-route";
-import { createRouterStateClashes } from "./routers/state-clashes/state-clashes.route";
+import { createRouterBoxer } from "./routers/boxer/boxer.router";
+import { createRouterCategory } from './routers/category/category.router';
+import { createRouterClashesParticipants } from './routers/clashes-participants/clashes-participants.router';
+import { createRouterClashes } from "./routers/clashes/clashes.router";
+import { createRouterCoach } from "./routers/coach/coach.router";
+import { createRouterSchool } from "./routers/school/school.router";
+import { createRouterStateClashes } from "./routers/state-clashes/state-clashes.router";
 
 const path = '/api/v1';
 

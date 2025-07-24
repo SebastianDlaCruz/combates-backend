@@ -1,7 +1,9 @@
 
 import express from 'express';
+import swaggerUi from 'swagger-ui-express';
 import { errorMiddleware } from './lib/middlewars/error.middleware';
 import { configMain } from './server.config';
+import swaggerSpec from './swagger';
 
 (async (config) => {
 
@@ -16,6 +18,7 @@ import { configMain } from './server.config';
     app.use(express.json());
     app.use(corsMethod());
 
+
     const connection = await connectionMethod();
 
     providerRouter.forEach((data) => {
@@ -23,6 +26,9 @@ import { configMain } from './server.config';
     });
 
     app.use(errorMiddleware);
+
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 
     const p = PORT || port;
 
