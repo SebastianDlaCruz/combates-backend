@@ -72,7 +72,7 @@ CREATE TABLE Boxer (
 -- Tabla: Clashes
 CREATE TABLE Clashes (
   id INT NOT NULL AUTO_INCREMENT,
-  number_clashes INT NOT NULL,
+  number INT NOT NULL,
   id_type_clashes INT NOT NULL,
   rounds INT NOT NULL,
   id_state INT NOT NULL,

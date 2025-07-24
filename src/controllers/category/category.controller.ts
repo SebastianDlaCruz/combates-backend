@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
-import { ICategory } from "../../lib/interfaces/category.interface";
 import { categorySchema } from "../../lib/schemas/categoty-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { Category } from "../../models/category/category.model";
+import { Category, CategoryCrud } from "../../models/category/category.interface";
 
 export class CategoryController {
 
-  private category: ICategory;
+  private category: CategoryCrud;
 
-  constructor(category: ICategory) {
+  constructor(category: CategoryCrud) {
     this.category = category;
   }
 

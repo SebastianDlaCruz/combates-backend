@@ -1,33 +1,18 @@
-import { RowDataPacket } from "mysql2";
 import { ConnectionDB } from "../../lib/config/connection-db.config";
-import { IClashes } from "../../lib/interfaces/clashes.interface";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { Clashes, ClashesCrud, ClashesFilters, ClashesQuery } from "./clashes.interface";
 
 
-
-export interface Clashes {
-  id: number;
-  number: number;
-  id_type_clashes: number;
-  rounds: number;
-  id_category: number;
-  id_state: string;
-};
-
-type ClashesQuery = Clashes & RowDataPacket;
-
-
-export class ClashesModel extends ConnectionDB implements IClashes {
+export class ClashesModel extends ConnectionDB implements ClashesCrud {
 
   constructor(connection: IConnection) {
     super(connection);
-
-
   }
 
 
@@ -37,13 +22,14 @@ export class ClashesModel extends ConnectionDB implements IClashes {
 
       const { id_category, id_state, id_type_clashes, rounds, number } = data;
 
-      console.log(data);
-
       const [result] = await this.connection.method.query(`
-        INSERT INTO Clashes (id_category, id_state,id_type_clashes,number_clashes,rounds) 
+        INSERT INTO Clashes (id_category, id_state,id_type_clashes,number,rounds) 
          VALUES (?, ?, ?, ?, ?)`
         , [id_category, id_state, id_type_clashes, number, rounds]);
 
+      if (!result) {
+        throw new Error('Error al crear el enfrentamiento');
+      }
 
 
       return getStateSuccess({
@@ -51,7 +37,8 @@ export class ClashesModel extends ConnectionDB implements IClashes {
       })
 
     } catch (error) {
-      return getStateError({ error });
+      const err = error instanceof Error ? error.message : '';
+      throw new InternalServerError(err)
     } finally {
       this.release();
     }
@@ -123,12 +110,13 @@ export class ClashesModel extends ConnectionDB implements IClashes {
     }
   }
 
-  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
+  async getAll(filters?: ClashesFilters): Promise<ResponseRequest> {
 
     try {
 
+      if (filters && filters.page && filters.pageSize) {
 
-      if (page && pageSize) {
+        const { page, pageSize } = filters;
 
         const responsePagination = await getPagination({
           page: parseInt(page),

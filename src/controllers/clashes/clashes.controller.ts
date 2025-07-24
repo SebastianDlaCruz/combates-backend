@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
-import { IClashes } from "../../lib/interfaces/clashes.interface";
 import { clashesSchema } from "../../lib/schemas/clashes-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { Clashes } from "../../models/clashes/clashes.model";
+import { Clashes, ClashesCrud } from "../../models/clashes/clashes.interface";
 
 export class ClashesController {
 
-  private clashes: IClashes;
-  constructor(clashes: IClashes) {
+  private clashes: ClashesCrud;
+  constructor(clashes: ClashesCrud) {
     this.clashes = clashes;
   }
 
@@ -35,7 +34,10 @@ export class ClashesController {
 
     const { page, pageSize } = req.query;
 
-    const result = await this.clashes.getAll(page?.toString(), pageSize?.toString());
+    const result = await this.clashes.getAll({
+      page: page?.toString(),
+      pageSize: pageSize?.toString()
+    });
 
     res.status(result.statusCode);
     res.json(result);

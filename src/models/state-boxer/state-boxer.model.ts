@@ -1,22 +1,27 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { IStateBoxer } from "../../lib/interfaces/state-boxer.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { StateBoxer, StateBoxerCrud } from "./state-boxer.interface";
 
-export interface StateBoxer {
-  id: number;
-  name: string;
-};
-
-
-export class StateBoxerModel extends ConnectionDB implements IStateBoxer {
+export class StateBoxerModel extends ConnectionDB implements StateBoxerCrud {
 
 
   constructor(connection: IConnection) {
     super(connection);
+  }
+
+
+  create(data: StateBoxer): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+  update(id: string | number, data: StateBoxer): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+  delete(id: string | number): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
   }
 
 

@@ -14,7 +14,7 @@ interface ProviderRouter {
 /**
  * Interface principal
  */
-export interface IMain<T> {
+export interface Main<T> {
   port: number;
   connectionMethod: () => Promise<T>;
   corsMethod: () => any;

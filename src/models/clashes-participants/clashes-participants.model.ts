@@ -1,10 +1,10 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
-import { IClashesParticipants } from "../../lib/interfaces/clashes-participants.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { ClashesParticipantsCrud } from "./clashes-participants.interface";
 
 export interface ClashesParticipants {
   id: number;
@@ -12,14 +12,12 @@ export interface ClashesParticipants {
   id_clashes: number;
 }
 
-export class ClashesParticipantsModel extends ConnectionDB implements IClashesParticipants {
-
+export class ClashesParticipantsModel extends ConnectionDB implements ClashesParticipantsCrud {
 
 
   constructor(connection: IConnection) {
     super(connection);
   };
-
 
 
   async delete(id: number): Promise<ResponseRequest> {

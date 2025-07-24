@@ -1,22 +1,29 @@
 import { NextFunction, Request, Response } from "express";
-import { IBoxer } from "../../lib/interfaces/boxer.interface";
 import { boxerSchema } from "../../lib/schemas/boxer-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { Boxer } from "../../models/boxer/type";
+import { Boxer, BoxerCrud } from "../../models/boxer/boxer.interface";
+
 
 export class BoxerController {
-  private boxer: IBoxer;
+  private boxer: BoxerCrud;
 
-  constructor(boxer: IBoxer) {
+  constructor(boxer: BoxerCrud) {
     this.boxer = boxer;
   }
 
   async getAll(req: Request, res: Response, next: NextFunction) {
 
     const { page, pageSize } = req.query;
-    const boxers = await this.boxer.getAll(page?.toString(), pageSize?.toString());
-    res.status(boxers.statusCode);
-    res.json(boxers);
+
+    const boxers = await this.boxer.getAll(
+      {
+        page: page?.toString(),
+        pageSize: pageSize?.toString()
+      }
+    );
+
+
+    res.status(boxers.statusCode || 200).json(boxers);
 
   }
 
@@ -89,14 +96,6 @@ export class BoxerController {
       res.json(response);
 
     }
-  }
-
-
-  async getByCategory(req: Request, res: Response) {
-    const { id_category } = req.params;
-    const result = await this.boxer.getByCategory(parseInt(id_category));
-    res.status(result.statusCode);
-    res.json(result);
   }
 
 

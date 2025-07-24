@@ -1,13 +1,12 @@
 import { Request, Response } from "express";
-import { ISchool } from "../../lib/interfaces/school.interface";
 import { schoolSchema } from "../../lib/schemas/school-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { School } from "../../models/school/school.model";
+import { School, SchoolCrud } from "../../models/school/school.interface";
 
 export class SchoolController {
-  private school: ISchool;
+  private school: SchoolCrud;
 
-  constructor(school: ISchool) {
+  constructor(school: SchoolCrud) {
     this.school = school;
   }
 

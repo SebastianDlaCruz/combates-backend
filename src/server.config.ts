@@ -8,7 +8,7 @@ import { CoachController } from "./controllers/coach/coach.controller";
 import { SchoolController } from "./controllers/school/school.controller";
 import { StateBoxerController } from './controllers/state-boxer/state-boxer.model';
 import { StateClashesController } from "./controllers/state-clashes/state-clashes.controller";
-import { IMain } from "./lib/interfaces/main.interface";
+import { Main } from "./lib/interfaces/main.interface";
 import { getConnectionDB } from "./lib/utils/connection-db.util";
 import { BoxerModel } from "./models/boxer/boxer.model";
 import { CategoryModel } from './models/category/category.model';
@@ -28,7 +28,7 @@ import { createRouterStateClashes } from "./routers/state-clashes/state-clashes.
 
 const path = '/api/v1';
 
-export const configMain: IMain<PoolConnection> = {
+export const configMain: Main<PoolConnection> = {
   port: 3000,
   connectionMethod: getConnectionDB,
   corsMethod: cors,

@@ -1,17 +1,12 @@
 import { Request, Response } from "express";
-import { IStateBoxer } from "../../lib/interfaces/state-boxer.interface";
-
-export interface StateBoxer {
-  id: number;
-  name: string;
-}
+import { StateBoxerCrud } from "../../models/state-boxer/state-boxer.interface";
 
 
 export class StateBoxerController {
 
-  private model: IStateBoxer;
+  private model: StateBoxerCrud;
 
-  constructor(model: IStateBoxer) {
+  constructor(model: StateBoxerCrud) {
     this.model = model;
   }
 

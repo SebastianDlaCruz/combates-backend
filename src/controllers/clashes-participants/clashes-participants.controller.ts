@@ -1,17 +1,20 @@
 import { Request, Response } from "express";
 import { clashesParticipants } from "../../lib/schemas/clashes-participants.schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { ClashesParticipants, ClashesParticipantsModel } from "../../models/clashes-participants/clashes-participants.model";
+import { ClashesParticipantsCrud } from "../../models/clashes-participants/clashes-participants.interface";
+import { ClashesParticipants } from "../../models/clashes-participants/clashes-participants.model";
 export class ClashesParticipantsController {
 
-  private model: ClashesParticipantsModel;
-  constructor(model: ClashesParticipantsModel) {
+  private model: ClashesParticipantsCrud;
+  constructor(model: ClashesParticipantsCrud) {
     this.model = model;
   }
 
   async getAll(req: Request, res: Response) {
 
-    const result = await this.model.getAll();
+    const result = await this.model.getAll({
+      id_category: parseInt(req.query.id_category?.toString() ?? '')
+    });
 
     res.status(result.statusCode);
     res.json(result);

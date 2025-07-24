@@ -1,19 +1,15 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
-import { ICoach } from "../../lib/interfaces/coach.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { Coach, CoachCrud, CoachFilter } from "./couch.interface";
 
-export interface Coach {
-  id: number;
-  name: string;
-  id_school: string;
-}
 
-export class CoachModel extends ConnectionDB implements ICoach {
+
+export class CoachModel extends ConnectionDB implements CoachCrud {
 
 
   constructor(connection: IConnection) {
@@ -87,11 +83,13 @@ export class CoachModel extends ConnectionDB implements ICoach {
 
   }
 
-  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
+  async getAll(filters?: CoachFilter): Promise<ResponseRequest> {
 
     try {
 
-      if (page && pageSize) {
+      if (filters && filters.page && filters.pageSize) {
+        const { page, pageSize } = filters;
+
         const responsePagination = await getPagination({
           connection: this.connection.method,
           page: parseInt(page),

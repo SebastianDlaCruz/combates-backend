@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { IStateClashes } from "../../lib/interfaces/state-clashes.intereface";
+import { StateClashesCrud } from "../../models/state-clashes/state-clashes.interface";
 
 export class StateClashesController {
 
-  private state: IStateClashes;
+  private state: StateClashesCrud;
 
-  constructor(state: IStateClashes) {
+  constructor(state: StateClashesCrud) {
     this.state = state;
   }
 

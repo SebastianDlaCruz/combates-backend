@@ -1,23 +1,30 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { IStateClashes } from "../../lib/interfaces/state-clashes.intereface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { StateClashes, StateClashesCrud } from "./state-clashes.interface";
 
-export interface StateClashes {
-  id: number;
-  name: string;
-}
 
-export class StateClashesModel extends ConnectionDB implements IStateClashes {
+export class StateClashesModel extends ConnectionDB implements StateClashesCrud {
 
 
 
   constructor(connection: IConnection) {
     super(connection);
   }
+
+  create(data: StateClashes): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+  update(id: string | number, data: StateClashes): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+  delete(id: string | number): Promise<ResponseRequest> {
+    throw new Error("Method not implemented.");
+  }
+
 
 
   async getAll(): Promise<ResponseRequest> {

@@ -31,7 +31,8 @@ import { configMain } from './server.config';
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Server failed to start:', error);
+    process.exit(1);
   }
 
 })(configMain);

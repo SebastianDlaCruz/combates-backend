@@ -3,28 +3,26 @@ import { getPagination } from "../../lib//utils/pagination/pagination.util";
 import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
 import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
-import { IBoxer } from "../../lib/interfaces/boxer.interface";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { Boxer, BoxerQuery } from './type';
-import { SearchBoxer } from "./util/search-boxer/search-boxer.util";
+import { ElementValidator } from "../../lib/utils/element-validator/element-validator";
+import { Boxer, BoxerCrud, BoxerFilters, BoxerQuery } from "./boxer.interface";
 
-export class BoxerModel extends ConnectionDB implements IBoxer {
+export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
 
-  private searchBoxer: SearchBoxer;
+  private elementValidator: ElementValidator;
 
   constructor(connection: IConnection) {
     super(connection);
-    this.searchBoxer = new SearchBoxer(this.connection.method);
+    this.elementValidator = new ElementValidator(this.connection.method);
   }
-
 
   async updateCorner(id: string, body: { corner: string; }): Promise<ResponseRequest> {
 
     try {
 
-      const valid = await this.searchBoxer.getId(id);
+      const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
         throw new NotFoundError('Boxeador no encontrado');
@@ -61,7 +59,7 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
 
     try {
 
-      const valid = await this.searchBoxer.getId(id);
+      const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
         throw new NotFoundError('Boxeador no encontrado');
@@ -123,7 +121,7 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
 
     try {
 
-      const valid = await this.searchBoxer.getId(id);
+      const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
 
@@ -149,14 +147,19 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
           WHERE 
         id = UUID_TO_BIN(?);`, [name, id_school, disability, id_category, weight, id_coach, details, id_state, corner, fights, gender, age, id]);
 
+
+      if (boxer) {
+        throw new Error('Error al actualizar el boxeador');
+      }
+
       return getStateSuccess({ message: 'éxito al actualizar el boxeador' });
 
     } catch (error) {
-
+      const err = error instanceof Error ? error.message : '';
       if (error instanceof NotFoundError) {
         throw new NotFoundError(error.message);
       }
-      throw new InternalServerError('Error desconocido al actualizar el boxeador');
+      throw new InternalServerError(err);
     } finally {
       this.release();
     }
@@ -166,7 +169,7 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
 
     try {
 
-      const valid = await this.searchBoxer.getId(id);
+      const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
         throw new NotFoundError('Boxeador no encontrado');
@@ -198,7 +201,7 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
 
     try {
 
-      const valid = await this.searchBoxer.getId(id);
+      const valid = await this.elementValidator.getBoxer(id);
 
 
       if (valid) {
@@ -245,11 +248,13 @@ export class BoxerModel extends ConnectionDB implements IBoxer {
     }
   }
 
-  async getAll(page?: string, pageSize?: string): Promise<ResponseRequest> {
+  async getAll(filters?: BoxerFilters): Promise<ResponseRequest> {
 
     try {
 
-      if (page && pageSize) {
+      if (filters && filters.page && filters.pageSize) {
+
+        const { page, pageSize } = filters;
 
         const responsePagination = await getPagination({
           page: parseInt(page),

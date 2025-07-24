@@ -3,7 +3,8 @@ import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { Boxer, BoxerModel } from "./boxer.model";
+import { Boxer } from './boxer.interface';
+import { BoxerModel } from "./boxer.model";
 
 jest.mock('../../lib/utils/pagination/pagination.util');
 jest.mock('../../lib/utils/validateElement/validate-element.util');
@@ -133,7 +134,10 @@ describe('BoxerModel', () => {
 
       (getPagination as jest.Mock).mockResolvedValueOnce(mockPagination);
 
-      const result = await boxerModel.getAll('1', '3');
+      const result = await boxerModel.getAll({
+        page: '1',
+        pageSize: '3'
+      });
 
       const mockResult = getStateSuccess({
         pagination: mockPagination.pagination
@@ -150,7 +154,10 @@ describe('BoxerModel', () => {
 
       (getPagination as jest.Mock).mockResolvedValueOnce({ success: false, pagination: null });
 
-      const result = await boxerModel.getAll('1', '3');
+      const result = await boxerModel.getAll({
+        page: '1',
+        pageSize: '3'
+      });
 
       const mockResponse = getStateError({ error: mockError });
 

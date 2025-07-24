@@ -1,12 +1,11 @@
 import { Request, Response } from "express";
-import { ICoach } from "../../lib/interfaces/coach.interface";
 import { coachSchema } from "../../lib/schemas/coach-schema";
 import { validateSchema } from "../../lib/utils/validate-body.util";
-import { Coach } from "../../models/couch/coach.model";
+import { Coach, CoachCrud } from "../../models/couch/couch.interface";
 
 export class CoachController {
-  private coach: ICoach;
-  constructor(coach: ICoach) {
+  private coach: CoachCrud;
+  constructor(coach: CoachCrud) {
     this.coach = coach;
   }
 
@@ -31,7 +30,11 @@ export class CoachController {
 
     const { page, pageSize } = req.query;
 
-    const result = await this.coach.getAll(page?.toString(), pageSize?.toString());
+    const result = await this.coach.getAll({
+      page: page?.toString(),
+      pageSize: pageSize?.toString()
+    });
+
     res.status(result.statusCode);
     res.json(result);
 

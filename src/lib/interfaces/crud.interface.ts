@@ -1,63 +1,20 @@
 import { ResponseRequest } from "./response-request.interface";
 
-export interface ICrud<T> {
-  /**
-   * Crear un nuevo registro en la base de datos
-   * @param data 
-   */
-  create(data: T): Promise<ResponseRequest>;
-  /**
-   * Actualiza los datos de un registro en la base de datos
-   * @param data 
-   */
-  update(id: string | number, data: T): Promise<ResponseRequest>;
-  /**
-   * Elimina un registro de la base de datos
-   * @param id 
-   */
-  delete(id: string | number): Promise<ResponseRequest>;
-  /**
-   *  Obtiene un registro de la base de datos
-   * @param page 
-   * @param pageSize 
-   */
-  getAll(page?: string, pageSize?: string): Promise<ResponseRequest>;
-}
-
-
 /**
-   * Actualiza los datos de un registro en la base de datos
-   * @param data 
-   */
-export interface IUpdate<T> {
-  update(id: string | number, data: T): Promise<ResponseRequest>;
-}
-
-/**
- * Elimina un registro de la base de datos
- * @param id 
+ * Interfaz para crear, actualizar, eliminar y obtener todos los registros de la base de datos
+ * @template T El tipo de dato que se va a crear, actualizar, eliminar y obtener
+ * @template F El tipo de dato que se va a filtrar
  * 
  */
 
-export interface IDelete {
-  delete(id: string | number): Promise<ResponseRequest>;
-}
+export interface Crud<T, F = any> {
 
-export interface ICreate<T> {
-  /**
- * Crear un nuevo registro en la base de datos
- * @param data 
- */
   create(data: T): Promise<ResponseRequest>;
-}
 
+  update(id: string | number, data: T): Promise<ResponseRequest>;
 
-export interface IGetAll {
-  /**
-   *  Obtiene un registro de la base de datos
-   * @param page 
-   * @param pageSize 
-   */
-  getAll(page?: string, pageSize?: string): Promise<ResponseRequest>;
+  delete(id: string | number): Promise<ResponseRequest>;
+
+  getAll(filters?: F): Promise<ResponseRequest>;
 }
 

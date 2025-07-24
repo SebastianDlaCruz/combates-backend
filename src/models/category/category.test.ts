@@ -1,15 +1,16 @@
 import { PoolConnection } from "mysql2/promise";
-import { ICategory } from "../../lib/interfaces/category.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { Category, CategoryModel } from "./category.model";
+import { Category, CategoryCrud } from "./category.interface";
+import { CategoryModel } from "./category.model";
+
 
 jest.mock('../../lib/utils/validateElement/validate-element.util');
 
 describe('Category Model', () => {
 
-  let categoryModel: ICategory;
+  let categoryModel: CategoryCrud;
   let mockConnection: Partial<PoolConnection>;
   let mockCategory: Category
 

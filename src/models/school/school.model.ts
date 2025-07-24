@@ -1,18 +1,14 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { ISchool } from "../../lib/interfaces/school.interface";
 import { getStateError } from "../../lib/utils/getStateError.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
 import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
+import { School, SchoolCrud, SchoolFilters } from "./school.interface";
 
-export interface School {
-  id: number;
-  name: string
-}
 
-export class SchoolModel extends ConnectionDB implements ISchool {
+export class SchoolModel extends ConnectionDB implements SchoolCrud {
 
 
   constructor(connection: IConnection) {
@@ -115,11 +111,13 @@ export class SchoolModel extends ConnectionDB implements ISchool {
     }
   }
 
-  async getAll(page: string, pageSize: string): Promise<ResponseRequest> {
+  async getAll(filters?: SchoolFilters): Promise<ResponseRequest> {
 
     try {
 
-      if (page && pageSize) {
+      if (filters && filters.page && filters.pageSize) {
+
+        const { page, pageSize } = filters;
 
         const responsePagination = await getPagination({
           page: parseInt(page),

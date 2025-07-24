@@ -24,11 +24,6 @@ export const createRouterBoxer = (boxerController: BoxerController) => {
   routerBoxer.patch('/:id', (req, res, next) => asyncWrapper(boxerController.update.bind(boxerController))(req, res, next));
 
 
-  routerBoxer.patch('/category/:id', (req, res) => {
-    boxerController.getByCategory(req, res);
-  });
-
-
   routerBoxer.put('/corner/:id', (req, res, next) => asyncWrapper(boxerController.updateCorner.bind(boxerController))(req, res, next));
 
 

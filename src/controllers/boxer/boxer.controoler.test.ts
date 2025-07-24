@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
-import { IBoxer } from "../../lib/interfaces/boxer.interface";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
+import { BoxerCrud } from "../../models/boxer/boxer.interface";
 import { BoxerController } from "./boxer.controller";
 
-const mockBoxer: Partial<IBoxer> = {
+const mockBoxer: Partial<BoxerCrud> = {
   getAll: jest.fn(),
   getBoxer: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
   updateState: jest.fn(),
   update: jest.fn(),
-  getByCategory: jest.fn(),
 };
 
 const mockResponse = () => {
