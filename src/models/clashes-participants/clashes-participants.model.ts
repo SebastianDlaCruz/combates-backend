@@ -1,10 +1,12 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { ClashesParticipantsCrud } from "./clashes-participants.interface";
+import { ClashesParticipantsCrud, ClashesParticipantsUpdateQuery } from "./clashes-participants.interface";
 
 export interface ClashesParticipants {
   id: number;
@@ -22,25 +24,17 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
 
   async delete(id: number): Promise<ResponseRequest> {
 
-    let code = 0;
 
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes_Participants WHERE id = ?',
-          value: [id]
-        }
-      });
+        element: 'Clashes_Participants',
+        where: [id]
+      })
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
-      }
-
-      if (valid.ok) {
-        code = 400;
-        throw new Error('Enfrentamiento no encontrada');
+      if (!exist) {
+        throw new NotFoundError('Clashes Participants no encontrada', CodeErrors.CLASHES_PARTICIPANTS_NOT_FOUND);
       }
 
       await this.connection.method.query('DELETE FROM Clashes_Participants WHERE id = ?', [id]);
@@ -48,9 +42,12 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
       return getStateSuccess();
 
     } catch (error) {
-      return getStateError({
-        error
-      });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al eliminar Clashes Participants', CodeErrors.ERROR_DELETE_CLASHES_PARTICIPANTS);
 
     } finally {
       this.release();
@@ -71,7 +68,7 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
 
     } catch (error) {
 
-      return getStateError({ error });
+      throw new InternalServerError('Error al obtener Clashes Participants', CodeErrors.CLASHES_PARTICIPANTS_NOT_FOUND);
 
     } finally {
 
@@ -83,23 +80,31 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
 
   async create(data: ClashesParticipants): Promise<ResponseRequest> {
     try {
-      const { id_boxer, id_clashes } = data;
 
-      const valid = await getValidateElements({
+
+      const existBoxer = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Boxer WHERE id = UUID_TO_BIN(?)',
-          value: [id_boxer]
-        }
-      });
+        element: 'Clashes_Participants',
+        where: [data.id_boxer],
+        parseUUID: true
+      })
 
-      if (!valid.ok) {
-        throw new Error(valid.message)
+      if (!existBoxer) {
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
+
       }
 
-      if (!valid.response) {
-        throw new Error('Boxeador no encontrado')
+      const existClashes = await getFindOne({
+        connection: this.connection.method,
+        element: 'Clashes',
+        where: [data.id_clashes],
+      })
+
+      if (!existClashes) {
+        throw new NotFoundError('Enfrentamiento no encontrado', CodeErrors.CLASHES_NOT_FOUND);
       }
+
+      const { id_boxer, id_clashes } = data;
 
       await this.connection.method.query(`
         INSERT INTO  Clashes_Participants (id_boxer,id_clashes ) VALUES (UUID_TO_BIN(?),?)`
@@ -110,7 +115,12 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
       });
 
     } catch (error) {
-      return getStateError({ error })
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al crear Clashes Participants', CodeErrors.ERROR_CREATE_CLASHES_PARTICIPANTS);
 
     } finally {
       this.release();
@@ -120,26 +130,18 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
 
   async update(id: number, data: ClashesParticipants): Promise<ResponseRequest> {
 
-    let code = 0;
-
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes_Participants WHERE id = ?',
-          value: [id]
-        }
-      });
+        element: 'Clashes_Participants',
+        where: [id]
+      })
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+      if (!exist) {
+        throw new NotFoundError('Clashes Participants no encontrada', CodeErrors.CLASHES_PARTICIPANTS_NOT_FOUND);
       }
 
-      if (!valid.response) {
-        code = 404;
-        throw new Error('Clashes Participants no encontrada');
-      }
 
       const { id_boxer, id_clashes } = data;
 
@@ -154,7 +156,12 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
 
     } catch (error) {
 
-      return getStateError({ error })
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al actualizar Clashes Participants', CodeErrors.ERROR_UPDATE_CLASHES_PARTICIPANTS);
+
     } finally {
 
       this.release();
@@ -165,30 +172,23 @@ export class ClashesParticipantsModel extends ConnectionDB implements ClashesPar
   async getClashesParticipants(id_clashes: number): Promise<ResponseRequest> {
     try {
 
-      const valid = await getValidateElements({
-        connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes_Participants WHERE id_clashes = ?',
-          value: [id_clashes]
-        }
-      });
+      const [result] = await this.connection.method.query<ClashesParticipantsUpdateQuery[]>('SELECT id , BIN_TO_UUID(id_boxer) as id_boxer , id_clashes FROM Clashes_Participants WHERE id_clashes = ?', [id_clashes]);
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+      if (!result) {
+        throw new NotFoundError('Clashes Participants no encontrada', CodeErrors.CLASHES_PARTICIPANTS_NOT_FOUND);
       }
 
-      if (!valid.response) {
-        throw new Error('Enfrentamiento no encontrado')
-      }
 
-      const [result] = await this.connection.method.query('SELECT id , BIN_TO_UUID(id_boxer) as id_boxer , id_clashes FROM Clashes_Participants WHERE id_clashes = ?', [id_clashes]);
-
-      const data = result as any[];
-
-      return getStateSuccess({ data: [...data] })
+      return getStateSuccess({ data: result })
 
     } catch (error) {
-      return getStateError({ error })
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener Clashes Participants', CodeErrors.CLASHES_PARTICIPANTS_NOT_FOUND);
+
     } finally {
       this.release();
     }

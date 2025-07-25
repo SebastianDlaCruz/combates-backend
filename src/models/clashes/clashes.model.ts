@@ -1,11 +1,12 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
 import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
 import { Clashes, ClashesCrud, ClashesFilters, ClashesQuery } from "./clashes.interface";
 
 
@@ -27,18 +28,15 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
          VALUES (?, ?, ?, ?, ?)`
         , [id_category, id_state, id_type_clashes, number, rounds]);
 
-      if (!result) {
-        throw new Error('Error al crear el enfrentamiento');
-      }
-
 
       return getStateSuccess({
         statusCode: 201,
       })
 
     } catch (error) {
-      const err = error instanceof Error ? error.message : '';
-      throw new InternalServerError(err)
+
+      throw new InternalServerError('Error al crear el enfrentamiento', CodeErrors.ERROR_CREATE_CLASHES);
+
     } finally {
       this.release();
     }
@@ -47,34 +45,31 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
   async update(id: number, data: Clashes): Promise<ResponseRequest> {
     try {
 
-
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
         element: 'Clashes',
-        value: [id]
-
+        where: ['id']
       });
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
-      }
 
-      if (!valid.response) {
-        throw new Error('Enfrentamiento no encontrado');
+      if (!exist) {
+        throw new NotFoundError('Enfrentamiento no encontrado', CodeErrors.CLASHES_NOT_FOUND);
       }
 
       const { id_type_clashes, number, rounds, id_state, id_category } = data;
 
-      const [result] = await this.connection.method.query('UPDATE Clashes SET id_type_clashes = ? , number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_type_clashes, number, rounds, id_state, id_category, id]);
-
-      if (!result) {
-        throw new Error('Error al actualizar el enfrentamiento');
-      }
+      await this.connection.method.query('UPDATE Clashes SET id_type_clashes = ? , number_clashes = ?,rounds =?,id_state = ?,id_category = ? WHERE id = ?', [id_type_clashes, number, rounds, id_state, id_category, id]);
 
       return getStateSuccess();
 
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al actualizar el enfrentamiento', CodeErrors.ERROR_UPDATE_CLASHES);
+
     } finally {
       this.release();
     }
@@ -84,18 +79,14 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
 
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
         element: 'Clashes',
-        value: [id]
+        where: ['id']
       });
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
-      }
-
-      if (!valid.response) {
-        throw new Error('Error enfrentamiento no encontrado');
+      if (!exist) {
+        throw new NotFoundError('Enfrentamiento no encontrado', CodeErrors.CLASHES_NOT_FOUND);
       }
 
       await this.connection.method.query('DELETE FROM Clashes WHERE id = ?', [id]);
@@ -103,8 +94,12 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
       return getStateSuccess();
 
     } catch (error) {
-      return getStateError({ error });
 
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al eliminar el enfrentamiento', CodeErrors.ERROR_DELETE_CLASHES);
     } finally {
       this.release();
     }
@@ -142,9 +137,9 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
       return getStateSuccess({ data: result });
 
     } catch (error) {
-      return getStateError({
-        error
-      })
+
+      throw new InternalServerError('Error al consultar los enfrentamientos', CodeErrors.CLASHES_NOT_FOUND);
+
     } finally {
       this.release();
     }
@@ -154,21 +149,16 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
   async getClashes(id: number): Promise<ResponseRequest> {
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes',
+        where: ['id']
       });
 
-      if (!valid.ok) {
-        throw new Error('Error al consultar un enfrentamiento');
+      if (!exist) {
+        throw new NotFoundError('Enfrentamiento no encontrado', CodeErrors.CLASHES_NOT_FOUND);
       }
 
-      if (valid.response) {
-        throw new Error('Error enfrentamiento no encontrado');
-      }
 
       const [result] = await this.connection.method.query<ClashesQuery[]>('SELECT * FROM Clashes WHERE id = ?', [id]);
 
@@ -178,7 +168,13 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
       })
 
     } catch (error) {
-      return getStateError({ error })
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al consultar el enfrentamiento', CodeErrors.ERROR_GET_CLASHES);
+
     } finally {
       this.release();
     }
@@ -187,33 +183,29 @@ export class ClashesModel extends ConnectionDB implements ClashesCrud {
   async updateState(id: number, id_state: number): Promise<ResponseRequest> {
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Clashes WHERE id = ?',
-          value: [id]
-        }
+        element: 'Clashes',
+        where: ['id']
       });
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
-      }
-
-      if (valid.response) {
-        throw new Error('Error enfrentamiento no encontrado');
+      if (!exist) {
+        throw new NotFoundError('Enfrentamiento no encontrado', CodeErrors.CLASHES_NOT_FOUND);
       }
 
       const [result] = await this.connection.method.query('UPDATE Clashes SET id_state= ? WHERE id = ?', [id_state, id]);
-      if (!result) {
-        throw new Error('Error actualizar el estado');
-      }
 
       return getStateSuccess({
         data: result
       });
 
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al actualizar el estado del enfrentamiento', CodeErrors.ERROR_UPDATE_CLASHES);
 
     } finally {
 

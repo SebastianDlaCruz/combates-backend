@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { Crud } from "../../lib/interfaces/crud.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 
@@ -12,6 +13,8 @@ export interface CoachFilter {
   pageSize?: string;
 }
 
+
+export type CoachQuery = Coach & RowDataPacket;
 
 export interface CoachCrud extends Crud<Coach, CoachFilter> {
   getCoach(id: number): Promise<ResponseRequest>

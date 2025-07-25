@@ -1,6 +1,7 @@
 import { getStateSuccess } from "../../lib//utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib//utils/pagination/pagination.util";
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
 import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
 import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
@@ -25,28 +26,20 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
-        throw new NotFoundError('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
       const [response] = await this.connection.method.query('UPDATE Boxer SET corner = ? WHERE id = UUID_TO_BIN(?)', [body.corner, id]);
 
-      if (!response) {
-        throw new Error('Error al actualizar la esquina del boxeador');
-      }
-
       return getStateSuccess({ message: 'éxito al actualizar la esquina  del boxeador' });
-
 
     } catch (error) {
 
-      const messageError = error instanceof Error ? error.message : '';
-
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(messageError);
+        throw error;
       }
 
-      throw new InternalServerError(messageError);
-
+      throw new InternalServerError('Error al actualizar la esquina del boxeador', CodeErrors.ERROR_UPDATE_CORNER_BOXER);
 
     } finally {
       this.release();
@@ -62,14 +55,11 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
-        throw new NotFoundError('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
       const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id =  UUID_TO_BIN(?);', [id]);
 
-      if (!result) {
-        throw new Error('Error desconocido al obtener el boxeador');
-      }
 
       return getStateSuccess({
         data: result[0]
@@ -78,16 +68,12 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
     } catch (error) {
 
-      const messageError = error instanceof Error ? error.message : '';
 
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(messageError);
+        throw error;
       }
 
-
-      throw new InternalServerError(messageError);
-
-
+      throw new InternalServerError('Error al obtener el boxeador');
 
     } finally {
       this.release();
@@ -100,7 +86,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       const [result] = await this.connection.method.query('INSERT INTO Boxer SET ?', [data]);
 
       if (!result) {
-        throw new Error('Error al crear el boxeador');
+        throw new InternalServerError('Error al crear el boxeador', CodeErrors.ERROR_CREATE_BOXER);
       }
 
       return getStateSuccess({
@@ -109,8 +95,8 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       })
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '';
-      throw new InternalServerError(errorMessage)
+
+      throw error;
 
     } finally {
       this.release();
@@ -125,7 +111,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
       if (valid) {
 
-        throw new NotFoundError('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
       const { age, details, disability, id_category, id_coach, id_school, id_state, name, weight, corner, fights, gender } = data;
@@ -147,19 +133,16 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
           WHERE 
         id = UUID_TO_BIN(?);`, [name, id_school, disability, id_category, weight, id_coach, details, id_state, corner, fights, gender, age, id]);
 
-
-      if (boxer) {
-        throw new Error('Error al actualizar el boxeador');
-      }
-
       return getStateSuccess({ message: 'éxito al actualizar el boxeador' });
 
     } catch (error) {
-      const err = error instanceof Error ? error.message : '';
+
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(error.message);
+        throw error;
       }
-      throw new InternalServerError(err);
+
+      throw new InternalServerError('Error al actualizar el boxeador');
+
     } finally {
       this.release();
     }
@@ -172,24 +155,20 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       const valid = await this.elementValidator.getBoxer(id);
 
       if (valid) {
-        throw new NotFoundError('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
-      const [state] = await this.connection.method.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
-
-      if (!state) {
-        throw new Error('Error al actualizar el estado del boxeador');
-      }
+      await this.connection.method.query('UPDATE Boxer SET id_state = ? WHERE id = UUID_TO_BIN(?);', [idState.state, id]);
 
       return getStateSuccess({ message: 'éxito al actualizar el estado del boxeador' });
 
     } catch (error) {
 
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(error.message);
+        throw error;
       }
 
-      throw new InternalServerError(error instanceof Error ? error.message : '');
+      throw new InternalServerError('Error al actualizar el estado del boxeador', CodeErrors.ERROR_UPDATE_BOXER);
 
     } finally {
       this.release();
@@ -205,7 +184,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
 
       if (valid) {
-        throw new NotFoundError('Boxeador no encontrado');
+        throw new NotFoundError('Boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
       await this.connection.method.query('DELETE FROM Boxer WHERE id = UUID_TO_BIN(?);', [id]);
@@ -215,10 +194,10 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
     } catch (error) {
 
       if (error instanceof NotFoundError) {
-        throw new NotFoundError(error.message);
+        throw error;
       }
 
-      throw new InternalServerError(error instanceof Error ? error.message : 'Error desconocido al eliminar el boxeador');
+      throw new InternalServerError('Error al eliminar el boxeador', CodeErrors.ERROR_DELETE_BOXER);
 
     } finally {
       this.release();
@@ -232,7 +211,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       const [result] = await this.connection.method.query('SELECT  BIN_TO_UUID(id) AS id , name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? ', [id_category]);
 
       if (!result) {
-        throw new Error('Error al buscar a los boxeadores por categoría');
+        throw new InternalServerError('Error al obtener los boxeadores por categoría', CodeErrors.ERROR_GET_BY_CATEGORY_BOXER);
       }
 
       return getStateSuccess({
@@ -241,7 +220,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
     } catch (error) {
 
-      throw new InternalServerError(error instanceof Error ? error.message : '');
+      throw error;
 
     } finally {
       this.release();
@@ -266,7 +245,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
         });
 
         if (!responsePagination.success) {
-          throw new Error('Error al devolver la paginacion de los boxeadores');
+          throw new InternalServerError('Error al obtener la paginación de los boxeadores', CodeErrors.ERROR_PAGINATION_BOXER);
         }
 
         if (responsePagination.success) {
@@ -282,7 +261,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
         SELECT  BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer`);
 
       if (!boxers) {
-        throw new Error('Error al obtener los boxeadores');;
+        throw new InternalServerError('Error al obtener los boxeadores', CodeErrors.BOXER_NOT_FOUND);
       }
 
 
@@ -291,9 +270,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
       });
 
     } catch (error) {
-
-
-      throw new InternalServerError(error instanceof Error ? error.message : '');
+      throw error;
 
     } finally {
       this.release();
@@ -311,9 +288,6 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE name LIKE ?', [`%${name}%`])
 
-        if (!result) {
-          throw new Error('Error al buscar el boxeador por nombre');
-        }
 
         return getStateSuccess({ data: result });
       }
@@ -323,11 +297,6 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ?', [id_category])
 
-
-        if (!result) {
-          throw new Error('Error al buscar el por categoría');
-        }
-
         return getStateSuccess({ data: result });
       }
 
@@ -336,10 +305,6 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
         const [result] = await this.connection.method.query<BoxerQuery[]>('SELECT BIN_TO_UUID(id) AS id, name, id_school, age, disability, id_category,weight,id_coach,details,id_state,  corner,fights,gender FROM Boxer WHERE id_category = ? AND name LIKE ?;', [id_category, `%${name}%`])
 
-
-        if (!result) {
-          throw new Error('Error al buscar el boxeador por nombre y categoría');
-        }
         return getStateSuccess({ data: result });
       }
 
@@ -347,7 +312,7 @@ export class BoxerModel extends ConnectionDB implements BoxerCrud {
 
     } catch (error) {
 
-      throw new InternalServerError(error instanceof Error ? error.message : '');
+      throw new InternalServerError('Error al buscar el boxeador', CodeErrors.ERROR_SEARCH_BOXER);
 
     } finally {
       this.release();

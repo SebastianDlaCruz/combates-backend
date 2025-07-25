@@ -1,11 +1,13 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { Coach, CoachCrud, CoachFilter } from "./couch.interface";
+import { Coach, CoachCrud, CoachFilter, CoachQuery } from "./couch.interface";
 
 
 
@@ -20,14 +22,13 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
   async create(data: Coach): Promise<ResponseRequest> {
     try {
 
-      const [result] = await this.connection.method.query('INSERT INTO Coach SET ?', [data]);
-      if (!result) {
-        throw new Error('Error al crear un entrenador')
-      }
+      await this.connection.method.query('INSERT INTO Coach SET ?', [data]);
+
       return getStateSuccess({ statusCode: 201 });
 
     } catch (error) {
-      return getStateError({ error });
+
+      throw new InternalServerError('Error al crear el coach', CodeErrors.ERROR_CREATE_COACH);
 
     } finally {
       this.release();
@@ -38,10 +39,14 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
 
     try {
 
-      const [found] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+      const exist = await getFindOne({
+        connection: this.connection.method,
+        element: 'Coach',
+        where: ['id'],
+      });
 
-      if (!found) {
-        throw new Error('No se encontró el profesor');
+      if (!exist) {
+        throw new NotFoundError('No se encontró el coach', CodeErrors.COACH_NOT_FOUND);
       }
 
       const { id_school, name } = data;
@@ -52,7 +57,11 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
 
     } catch (error) {
 
-      return getStateError({ error });
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al actualizar el coach', CodeErrors.ERROR_UPDATE_BOXER);
 
     } finally {
       this.release();
@@ -64,10 +73,14 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
 
     try {
 
-      const [found] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ? ', [id]);
+      const exist = await getFindOne({
+        connection: this.connection.method,
+        element: 'Coach',
+        where: ['id'],
+      });
 
-      if (!found) {
-        throw new Error('No se encontró el profesor');
+      if (!exist) {
+        throw new NotFoundError('No se encontró el coach', CodeErrors.COACH_NOT_FOUND);
       }
 
       await this.connection.method.query('DELETE FROM Coach WHERE id = ?', [id]);
@@ -76,7 +89,12 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
 
     } catch (error) {
 
-      return getStateError({ error });
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al eliminar el coach', CodeErrors.ERROR_DELETE_COACH);
+
     } finally {
       this.release();
     }
@@ -100,7 +118,7 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
         });
 
         if (!responsePagination.success) {
-          throw new Error('Error al devolver la paginacion de los boxeadores');
+          throw new InternalServerError('Error al obtener la paginación', CodeErrors.ERROR_PAGINATION_COACH);
         }
 
         if (responsePagination.success) {
@@ -110,9 +128,16 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
       }
 
       const [result] = await this.connection.method.query('SELECT * FROM Coach');
+
       return getStateSuccess({ data: result });
+
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener los coaches', CodeErrors.ERROR_GET_ALL_COACH);
 
     } finally {
       this.release();
@@ -122,31 +147,30 @@ export class CoachModel extends ConnectionDB implements CoachCrud {
   async getCoach(id: number): Promise<ResponseRequest> {
 
     try {
-      const valid = await getValidateElements({
+
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM Coach WHERE id = ?',
-          value: [id]
-        }
+        element: 'Coach',
+        where: ['id'],
       });
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+      if (!exist) {
+        throw new NotFoundError('No se encontró el coach', CodeErrors.COACH_NOT_FOUND);
       }
 
-      if (!valid.response) {
-        throw new Error('Error al consultar el coach');
-      }
-
-      const [result] = await this.connection.method.query('SELECT * FROM Coach WHERE id = ?', [id]);
-      const newData = result as any[];
+      const [result] = await this.connection.method.query<CoachQuery[]>('SELECT * FROM Coach WHERE id = ?', [id]);
 
       return getStateSuccess({
-        data: newData[0]
+        data: result[0]
       })
 
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener el coach', CodeErrors.ERROR_GET_COACH);
 
     } finally {
       this.release();

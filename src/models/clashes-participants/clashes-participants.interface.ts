@@ -1,3 +1,4 @@
+import { RowDataPacket } from "mysql2";
 import { Crud } from "../../lib/interfaces/crud.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
 
@@ -10,6 +11,8 @@ export interface ClashesParticipants {
 export interface ClashesParticipantsCreateFilters {
   id_category: number;
 }
+
+export type ClashesParticipantsUpdateQuery = ClashesParticipants & RowDataPacket;
 
 export interface ClashesParticipantsCrud extends Crud<ClashesParticipants, ClashesParticipantsCreateFilters> {
 

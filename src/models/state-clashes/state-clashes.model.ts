@@ -1,10 +1,12 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { StateClashes, StateClashesCrud } from "./state-clashes.interface";
+import { StateClashes, StateClashesCrud, StateClashesQuery } from "./state-clashes.interface";
 
 
 export class StateClashesModel extends ConnectionDB implements StateClashesCrud {
@@ -38,35 +40,44 @@ export class StateClashesModel extends ConnectionDB implements StateClashesCrud 
 
     } catch (error) {
 
-      return getStateError({ error });
+      throw new InternalServerError('Error al obtener los estados de los enfrentamientos', CodeErrors.ERROR_GET_ALL_STATE_BOXER);
 
     } finally {
       this.release();
     }
   }
 
+
   async getStateClashes(id: number): Promise<ResponseRequest> {
 
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
+
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM State_Clashes WHERE id = ?',
-          value: [id]
-        }
-      });
+        element: 'State_Clashes',
+        where: [id]
 
+      })
 
-      const [result] = await this.connection.method.query('SELECT * FROM State_Clashes WHERE id = ?', [id]);
-      const newDate = result as any[];
+      if (!exist) {
+        throw new NotFoundError('Estado de enfrentamiento no encontrado', CodeErrors.ERROR_GET_STATE_CLASHES);
+      }
+
+      const [result] = await this.connection.method.query<StateClashesQuery[]>('SELECT * FROM State_Clashes WHERE id = ?', [id]);
+
 
       return getStateSuccess({
-        data: newDate[0]
+        data: result[0]
       })
 
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener el estado del enfrentamiento', CodeErrors.ERROR_GET_STATE_CLASHES);
 
     } finally {
       this.release();

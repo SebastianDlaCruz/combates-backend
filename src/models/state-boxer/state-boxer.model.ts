@@ -1,10 +1,11 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { StateBoxer, StateBoxerCrud } from "./state-boxer.interface";
+import { StateBoxer, StateBoxerCrud, StateBoxerQuery } from "./state-boxer.interface";
 
 export class StateBoxerModel extends ConnectionDB implements StateBoxerCrud {
 
@@ -37,7 +38,9 @@ export class StateBoxerModel extends ConnectionDB implements StateBoxerCrud {
       });
 
     } catch (error) {
-      return getStateError({ error });
+
+      throw new InternalServerError('Error al obtener los estados de los boxeadores', CodeErrors.ERROR_GET_ALL_STATE_BOXER)
+
     } finally {
       this.release();
     }
@@ -46,32 +49,33 @@ export class StateBoxerModel extends ConnectionDB implements StateBoxerCrud {
 
   async getStateBoxer(id: number): Promise<ResponseRequest> {
     try {
-      const valid = await getValidateElements({
+
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM State_Boxer WHERE id = ?',
-          value: [id]
-        }
-      });
+        element: 'State_Boxer',
+        where: [id]
+      })
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+
+      if (!exist) {
+        throw new InternalServerError('Estado de boxeador no encontrado', CodeErrors.BOXER_NOT_FOUND);
       }
 
-
-      if (!valid.response) {
-        throw new Error('Estado del boxeador no encontrado');
-      }
-
-      const [result] = await this.connection.method.query('SELECT * FROM State_Boxer WHERE id = ?', [id]);
-      const newDate = result as any[];
+      const [result] = await this.connection.method.query<StateBoxerQuery[]>('SELECT * FROM State_Boxer WHERE id = ?', [id]);
 
       return getStateSuccess({
-        data: newDate[0]
+        data: result[0]
       });
 
     } catch (error) {
-      return getStateError({ error });
+
+      if (error instanceof InternalServerError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener el estado del boxeador', CodeErrors.ERROR_GET_STATE_BOXER);
+
+
     } finally {
       this.release();
     }

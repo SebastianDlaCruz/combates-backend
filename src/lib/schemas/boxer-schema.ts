@@ -23,8 +23,8 @@ export const boxerSchema = z.object({
     required_error: 'La esquina es requerido'
   }),
   id_category: z.number({
-    invalid_type_error: 'El id de la categoria tiene que ser un numero entero',
-    required_error: 'El id de la de la categoria escuela es requerido'
+    invalid_type_error: 'El id de la categoría tiene que ser un numero entero',
+    required_error: 'El id de la de la categoría escuela es requerido'
   }),
   fights: z.number({
     invalid_type_error: 'La cantidad de peleas  tiene que ser un numero entero',

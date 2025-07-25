@@ -1,11 +1,13 @@
 import { ConnectionDB } from "../../lib/config/connection-db.config";
+import { CodeErrors } from "../../lib/const/code-errors.const";
+import { InternalServerError } from "../../lib/erros/internal-server-error/internal-server.error";
+import { NotFoundError } from "../../lib/erros/not-found/not-found.error";
 import { IConnection } from "../../lib/interfaces/connection.interface";
 import { ResponseRequest } from "../../lib/interfaces/response-request.interface";
-import { getStateError } from "../../lib/utils/getStateError.util";
+import { getFindOne } from "../../lib/utils/getFindOne/getFindOne.util";
 import { getStateSuccess } from "../../lib/utils/getStateSuccess.util.ts/getStateSuccess.util";
 import { getPagination } from "../../lib/utils/pagination/pagination.util";
-import { getValidateElements } from "../../lib/utils/validateElement/validate-element.util";
-import { School, SchoolCrud, SchoolFilters } from "./school.interface";
+import { School, SchoolCrud, SchoolFilters, SchoolQuery } from "./school.interface";
 
 
 export class SchoolModel extends ConnectionDB implements SchoolCrud {
@@ -19,33 +21,29 @@ export class SchoolModel extends ConnectionDB implements SchoolCrud {
   async getSchool(id: number): Promise<ResponseRequest> {
     try {
 
-      const valid = await getValidateElements({
+      const exist = await getFindOne({
         connection: this.connection.method,
-        query: {
-          sql: 'SELECT * FROM School WHERE id = ?',
-          value: [id]
-        }
+        element: 'School',
+        where: ['id'],
       });
 
-      if (!valid.ok) {
-        throw new Error(valid.message);
+      if (!exist) {
+        throw new NotFoundError('Escuela no encontrada', CodeErrors.SCHOOL_NOT_FOUND)
       }
 
-      if (!valid.response) {
-        throw new Error('Escuela no encontrada');
+      const [result] = await this.connection.method.query<SchoolQuery[]>('SELECT * FROM School WHERE id = ?', [id]);
 
-      }
-
-      const [result] = await this.connection.method.query('SELECT * FROM School WHERE id = ?', [id]);
-
-      const newData = result as any[];
-
-      return getStateSuccess({ data: newData[0] });
+      return getStateSuccess({ data: result[0] });
 
     } catch (error) {
-      return getStateError({
-        error
-      })
+
+      if (error instanceof NotFoundError) {
+        throw error;
+
+      }
+
+      throw new InternalServerError('Error al obtener la escuela', CodeErrors.ERROR_GET_SCHOOL);
+
     } finally {
       this.release();
     }
@@ -54,18 +52,13 @@ export class SchoolModel extends ConnectionDB implements SchoolCrud {
   async create(data: School): Promise<ResponseRequest> {
     try {
 
-      const [res] = await this.connection.method.query('INSERT INTO School SET ?', [data]);
-
-      if (!res) {
-        throw new Error('Error al crear');
-      }
+      await this.connection.method.query('INSERT INTO School SET ?', [data]);
 
       return getStateSuccess();
 
     } catch (error) {
-      return getStateError({
-        error
-      })
+      throw new InternalServerError('Error al crear la escuela', CodeErrors.ERROR_CREATE_SCHOOL);
+
     } finally {
       this.release();
     }
@@ -75,40 +68,63 @@ export class SchoolModel extends ConnectionDB implements SchoolCrud {
 
     try {
 
-      const [res] = await this.connection.method.query('UPDATE School name = ? WHERE id = ?', [data.name, id]);
+      const exist = await getFindOne({
+        connection: this.connection.method,
+        element: 'School',
+        where: ['id'],
+      });
 
-      if (!res) {
-        throw new Error('Error al actualizar la escuela')
+      if (!exist) {
+        throw new NotFoundError('Escuela no encontrada', CodeErrors.SCHOOL_NOT_FOUND);
       }
+
+      await this.connection.method.query('UPDATE School name = ? WHERE id = ?', [data.name, id]);
 
       return getStateSuccess({ data });
 
     } catch (error) {
-      const result = getStateError({
-        error
-      });
-      return result;
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al actualizar la escuela', CodeErrors.ERROR_UPDATE_SCHOOL);
+
     } finally {
       this.release();
     }
   }
 
   async delete(id: number): Promise<ResponseRequest> {
+
     try {
 
-      const [res] = await this.connection.method.query('DELETE FROM School WHERE id = ?', [id]);
+      const exist = await getFindOne({
+        connection: this.connection.method,
+        element: 'School',
+        where: ['id'],
+      });
 
-      if (!res) {
-        throw new Error('Error al eliminar una escuela');
+      if (!exist) {
+        throw new NotFoundError('Escuela no encontrada', CodeErrors.SCHOOL_NOT_FOUND);
       }
+
+      await this.connection.method.query('DELETE FROM School WHERE id = ?', [id]);
 
       return getStateSuccess();
 
     } catch (error) {
-      return getStateError({
-        error
-      });
+
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al eliminar la escuela', CodeErrors.ERROR_DELETE_SCHOOL);
+
+    } finally {
+      this.release();
     }
+
   }
 
   async getAll(filters?: SchoolFilters): Promise<ResponseRequest> {
@@ -128,8 +144,9 @@ export class SchoolModel extends ConnectionDB implements SchoolCrud {
           routerApi: 'api/v1/school'
         });
 
+
         if (!responsePagination.success) {
-          throw new Error('Error de la pagination');
+          throw new NotFoundError('No se encontraron escuelas', CodeErrors.SCHOOL_NOT_FOUND);
         }
 
         if (responsePagination.success) {
@@ -138,21 +155,24 @@ export class SchoolModel extends ConnectionDB implements SchoolCrud {
 
       }
 
-      const [res] = await this.connection.method.query('SELECT * FROM School');
-
-      if (!res) {
-        throw new Error('Error al consultar');
-      }
+      const [res] = await this.connection.method.query<SchoolQuery[]>('SELECT * FROM School');
 
       return getStateSuccess({ data: res });
 
 
     } catch (error) {
 
-      return getStateError({
-        error
-      })
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError('Error al obtener las escuelas', CodeErrors.ERROR_GET_ALL_COACH);
+
+    } finally {
+      this.release();
     }
+
+
   }
 
 }
